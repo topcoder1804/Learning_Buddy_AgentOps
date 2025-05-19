@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom"
-import { SignedIn, SignedOut } from "@clerk/clerk-react"
+import { AuthenticateWithRedirectCallback, SignedIn, SignedOut } from "@clerk/clerk-react"
 import { Toaster } from "react-hot-toast"
 
 // Layouts
@@ -22,6 +22,15 @@ function App() {
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login/sso-callback"
+            element={
+              <AuthenticateWithRedirectCallback
+                signInUrl="/login"
+                signUpUrl="/signup"
+              />
+            }
+          />
         </Route>
 
         {/* Protected Routes */}
