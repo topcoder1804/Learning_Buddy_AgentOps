@@ -4,11 +4,11 @@ import { useState, useEffect } from "react"
 import { useUser } from "@clerk/clerk-react"
 import { XIcon } from "lucide-react"
 import toast from "react-hot-toast"
-import { fetchUserById, updateUser } from "../services/api"
+import { fetchUserById, updateUser, fetchOrCreateUserByEmail } from "../services/api"
 
 function ProfilePage() {
   const { user } = useUser()
-
+  const [backendUser, setBackendUser] = useState(null)
   const [formData, setFormData] = useState({
     name: "",
     profession: "",
@@ -18,36 +18,33 @@ function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
+  // Fetch or create backend user
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadBackendUser = async () => {
       try {
         setIsLoading(true)
+        if (!user) return
 
-        // Try to get from localStorage first
-        const savedUser = localStorage.getItem("userData")
+        const email = user.emailAddresses?.[0]?.emailAddress
+        const name = user.fullName || user.firstName || "Unknown"
+        const backendUser = await fetchOrCreateUserByEmail(email, name)
+        setBackendUser(backendUser)
 
-        if (savedUser) {
-          setFormData(JSON.parse(savedUser))
-        } else if (user) {
-          // Fallback to API
-          const userData = await fetchUserById(user.id)
+        setFormData({
+          name: backendUser.name || user.fullName || "",
+          profession: backendUser.profession || "",
+          interests: backendUser.interests || [],
+        })
 
-          setFormData({
-            name: userData.name || user.fullName || "",
-            profession: userData.profession || "",
-            interests: userData.interests || [],
-          })
-
-          // Save to localStorage
-          localStorage.setItem(
-            "userData",
-            JSON.stringify({
-              name: userData.name || user.fullName || "",
-              profession: userData.profession || "",
-              interests: userData.interests || [],
-            }),
-          )
-        }
+        // Save to localStorage
+        localStorage.setItem(
+          "userData",
+          JSON.stringify({
+            name: backendUser.name || user.fullName || "",
+            profession: backendUser.profession || "",
+            interests: backendUser.interests || [],
+          }),
+        )
       } catch (error) {
         console.error("Error loading user data:", error)
         toast.error("Failed to load profile data")
@@ -65,7 +62,8 @@ function ProfilePage() {
       }
     }
 
-    loadUserData()
+    loadBackendUser()
+    // eslint-disable-next-line
   }, [user])
 
   const handleChange = (e) => {
@@ -102,8 +100,13 @@ function ProfilePage() {
     try {
       setIsSaving(true)
 
+      if (!backendUser) {
+        toast.error("User not loaded")
+        return
+      }
+
       // Update API
-      await updateUser(user.id, formData)
+      await updateUser(backendUser._id, formData)
 
       // Update localStorage
       localStorage.setItem("userData", JSON.stringify(formData))

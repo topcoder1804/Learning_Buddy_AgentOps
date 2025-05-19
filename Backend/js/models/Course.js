@@ -14,7 +14,8 @@ const CourseSchema = new Schema({
   tags:        [String],
   messages:    [MessageSchema],
   quizzes:     [{ quiz: { type: Schema.Types.ObjectId, ref: 'Quiz' }, sequenceNo: Number }],
-  assignments: [{ assignment: { type: Schema.Types.ObjectId, ref: 'Assignment' }, sequenceNo: Number }]
+  assignments: [{ assignment: { type: Schema.Types.ObjectId, ref: 'Assignment' }, sequenceNo: Number }],
+  createdBy:   { type: Schema.Types.ObjectId, ref: 'User', required: true }  // <-- NEW FIELD
 }, { timestamps: true });
 
 module.exports = mongoose.model('Course', CourseSchema);

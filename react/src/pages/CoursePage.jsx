@@ -5,17 +5,34 @@ import { useParams } from "react-router-dom"
 import { useUser } from "@clerk/clerk-react"
 import { MessageSquareIcon, BookIcon, FileTextIcon, SendIcon } from "lucide-react"
 import toast from "react-hot-toast"
-import { fetchCourseById, generateQuiz, generateAssignment } from "../services/api"
+import { fetchCourseById, generateQuiz, generateAssignment, fetchOrCreateUserByEmail } from "../services/api"
 
 function CoursePage() {
   const { id } = useParams()
   const { user } = useUser()
+  const [backendUser, setBackendUser] = useState(null)
   const [course, setCourse] = useState(null)
   const [activeTab, setActiveTab] = useState("messages")
   const [isLoading, setIsLoading] = useState(true)
   const [newMessage, setNewMessage] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const chatEndRef = useRef(null)
+
+  // Fetch or create backend user
+  useEffect(() => {
+    const getBackendUser = async () => {
+      if (!user) return
+      const email = user.emailAddresses?.[0]?.emailAddress
+      const name = user.fullName || user.firstName || "Unknown"
+      try {
+        const backendUser = await fetchOrCreateUserByEmail(email, name)
+        setBackendUser(backendUser)
+      } catch (err) {
+        setBackendUser(null)
+      }
+    }
+    getBackendUser()
+  }, [user])
 
   // Load course data
   useEffect(() => {
@@ -25,7 +42,7 @@ function CoursePage() {
         const courseData = await fetchCourseById(id)
         setCourse(courseData)
 
-        // Also check localStorage
+        // Also check localStorage...
         const savedCourses = JSON.parse(localStorage.getItem("courses") || "[]")
         const localCourse = savedCourses.find((c) => c._id === id)
 
@@ -55,7 +72,6 @@ function CoursePage() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-
     if (!newMessage.trim()) return
 
     // Create a new message object
@@ -64,7 +80,6 @@ function CoursePage() {
       message: newMessage,
       sequenceNo: (course?.messages?.length || 0) + 1,
     }
-
     // Update local state
     const updatedMessages = [...(course?.messages || []), message]
     setCourse((prev) => ({
@@ -156,7 +171,7 @@ function CoursePage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || !backendUser) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

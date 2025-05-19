@@ -6,28 +6,38 @@ import { PlusIcon } from "lucide-react"
 import toast from "react-hot-toast"
 import CourseCard from "../components/CourseCard"
 import NewCourseModal from "../components/NewCourseModal"
-import { fetchCourses, fetchUserProgress } from "../services/api"
+import { fetchCoursesForUser, fetchUserProgress, fetchOrCreateUserByEmail } from "../services/api"
 
 function HomePage() {
   const { user } = useUser()
+  const [backendUser, setBackendUser] = useState(null)
   const [courses, setCourses] = useState([])
   const [userProgress, setUserProgress] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  // Fetch or create backend user, then load courses and progress
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true)
-        const coursesData = await fetchCourses()
+        if (!user) return
 
-        // Get user progress if we have courses
-        if (coursesData.length > 0) {
-          const progressData = await fetchUserProgress(user.id)
+        // 1. Get or create backend user
+        const email = user.emailAddresses?.[0]?.emailAddress
+        const name = user.fullName || user.firstName || "Unknown"
+        const backendUser = await fetchOrCreateUserByEmail(email, name)
+        setBackendUser(backendUser)
+
+        // 2. Fetch user-specific courses
+        const coursesData = await fetchCoursesForUser(backendUser._id)
+        setCourses(coursesData)
+
+        // 3. Fetch user progress using backend user ID
+        if (coursesData.length > 0 && backendUser) {
+          const progressData = await fetchUserProgress(backendUser._id)
           setUserProgress(progressData)
         }
-
-        setCourses(coursesData)
       } catch (error) {
         console.error("Error loading home data:", error)
         toast.error("Failed to load courses")
@@ -36,35 +46,23 @@ function HomePage() {
       }
     }
 
-    if (user) {
-      loadData()
-    }
+    loadData()
   }, [user])
 
-  // Load from localStorage on component mount
-  useEffect(() => {
-    const savedCourses = localStorage.getItem("courses")
-    const savedProgress = localStorage.getItem("userProgress")
-
-    if (savedCourses) {
-      setCourses(JSON.parse(savedCourses))
-    }
-
-    if (savedProgress) {
-      setUserProgress(JSON.parse(savedProgress))
-    }
-  }, [])
-
-  // Save to localStorage whenever data changes
+  // Save to localStorage whenever data changes (optional, for faster UI)
   useEffect(() => {
     localStorage.setItem("courses", JSON.stringify(courses))
     localStorage.setItem("userProgress", JSON.stringify(userProgress))
   }, [courses, userProgress])
 
-  const handleNewCourse = (newCourse) => {
-    setCourses([...courses, newCourse])
+  const handleNewCourse = async (newCourse) => {
     setIsModalOpen(false)
     toast.success("New course created!")
+    // Re-fetch from backend to get the latest list
+    if (backendUser) {
+      const coursesData = await fetchCoursesForUser(backendUser._id)
+      setCourses(coursesData)
+    }
   }
 
   if (isLoading) {
@@ -107,7 +105,11 @@ function HomePage() {
       )}
 
       {isModalOpen && (
-        <NewCourseModal onClose={() => setIsModalOpen(false)} onSave={handleNewCourse} userId={user.id} />
+        <NewCourseModal
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleNewCourse}
+          userId={backendUser?._id}
+        />
       )}
     </div>
   )
