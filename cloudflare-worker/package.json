@@ -1,0 +1,26 @@
+{
+	"name": "cloudflare-worker",
+	"version": "1.0.0",
+	"description": "",
+	"main": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"deploy": "wrangler deploy src/index.ts",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"test": "vitest run"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@cloudflare/ai": "^1.2.2",
+		"hono": "^4.4.10"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20240620.0",
+		"typescript": "^5.5.3",
+		"vitest": "^1.6.0",
+		"wrangler": "^3.62.0"
+	}
+}
