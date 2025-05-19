@@ -9,7 +9,7 @@ api_key = os.getenv("GROQ_API_KEY")
 # Initialize Groq client
 client = Groq(api_key=api_key)
 
-def generate_assignment(topic: str, model="mixtral-8x7b-32768"):
+def generate_assignment(topic: str, model="meta-llama/llama-4-maverick-17b-128e-instruct"):
     prompt = f"""
     Generate 5 descriptive assignment-style questions on the topic: "{topic}".
     The questions should encourage critical thinking and explanation.

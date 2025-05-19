@@ -1,4 +1,8 @@
 const Quiz = require('../models/Quiz');
+const Course = require('../models/Course'); // <-- Import Course model!
+const Groq = require('groq-sdk');
+require('dotenv').config();
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // GET /api/quizzes
 exports.getQuizzes = async (req, res) => {
@@ -76,5 +80,68 @@ exports.addScore = async (req, res) => {
     res.json(quiz);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// POST /api/quizzes/generate
+exports.generateQuiz = async (req, res) => {
+  //console.log("generateQuiz endpoint hit", req.body);
+  const { topic, dueDate } = req.body; // topic is the Course ObjectId
+
+  try {
+    // 1. Lookup the course by ObjectId
+    const course = await Course.findById(topic);
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // 2. Use the course name in the AI prompt
+    const prompt = `
+Create a JSON array of 5 multiple-choice questions (MCQs) on the topic "${course.name}".
+Each object should have:
+- "question": The question text
+- "options": An array of 4 options
+- "answer": The correct answer text
+- "hint": A short hint to help solve the question
+
+Format strictly as valid JSON only. Do not include explanations outside the array.
+    `;
+   // console.log("Prompt sent to Groq:", prompt);
+    const response = await groq.chat.completions.create({
+      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert quiz generator that returns structured JSON for educational apps."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
+
+    const content = response.choices[0].message.content.trim();
+    let questions;
+    try {
+      questions = JSON.parse(content);
+    } catch (err) {
+      return res.status(500).json({ error: "Could not parse JSON from Groq response", raw: content });
+    }
+
+    const now = new Date();
+    const defaultDue = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    // Save the quiz to the database
+    const quiz = new Quiz({
+      topic, // ObjectId reference to Course
+      questions,
+      dueDate: dueDate ? new Date(dueDate) : defaultDue
+    });
+    await quiz.save();
+    res.status(201).json(quiz);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

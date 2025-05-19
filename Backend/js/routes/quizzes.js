@@ -7,7 +7,8 @@ const {
   createQuiz,
   updateQuiz,
   deleteQuiz,
-  addScore
+  addScore,
+  generateQuiz
 } = require('../controllers/quizController');
 
 // @route   GET /api/quizzes
@@ -33,5 +34,7 @@ router.delete('/:id', deleteQuiz);
 // @route   POST /api/quizzes/:id/score
 // @desc    Add a new score entry for this quiz
 router.post('/:id/score', addScore);
+
+router.post('/generate', generateQuiz);
 
 module.exports = router;
