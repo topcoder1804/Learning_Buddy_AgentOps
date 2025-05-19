@@ -10,7 +10,7 @@ api_key = os.getenv("GROQ_API_KEY")
 # Initialize Groq client
 client = Groq(api_key=api_key)
 
-def generate_quiz(topic: str, model="mixtral-8x7b-32768"):
+def generate_quiz(topic: str, model="meta-llama/llama-4-maverick-17b-128e-instruct"):
     prompt = f"""
     Create a JSON array of 5 multiple-choice questions (MCQs) on the topic "{topic}".
     Each object should have:
