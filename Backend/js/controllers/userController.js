@@ -30,6 +30,7 @@ exports.updateUser = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 exports.createUser = async (req, res) => {
   try {
     const user = new User(req.body);
@@ -106,6 +107,24 @@ exports.getUserQuizProgress = async (req, res) => {
     }).filter(Boolean);
 
     res.json({ quizzes: userQuizzes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getOrCreateUserByEmail = async (req, res) => {
+  const { email, name } = req.query;
+  try {
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({
+        name: name || 'Unknown',
+        email,
+        courses: []
+      });
+      await user.save();
+    }
+    res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

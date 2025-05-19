@@ -35,10 +35,7 @@ function NewCourseModal({ onClose, onSave, userId }) {
         userId,
       })
 
-      // Update local storage
-      const savedCourses = JSON.parse(localStorage.getItem("courses") || "[]")
-      const updatedCourses = [...savedCourses, newCourse]
-      localStorage.setItem("courses", JSON.stringify(updatedCourses))
+      // No need to update localStorage anymore!
 
       onSave(newCourse)
     } catch (error) {
@@ -81,13 +78,13 @@ function NewCourseModal({ onClose, onSave, userId }) {
               <select
                 name="level"
                 value={formData.level}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-              >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </select>
+                 onChange={handleChange}
+                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                >
+                   <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
             </div>
 
             <div>

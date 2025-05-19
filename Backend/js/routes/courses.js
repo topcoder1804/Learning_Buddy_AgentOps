@@ -1,32 +1,30 @@
-// routes/courses.js
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const {
   getCourses,
+  getCoursesForUser,
   getCourseById,
   createCourse,
   updateCourse,
   deleteCourse
 } = require('../controllers/courseController');
 
-// @route   GET /api/courses
-// @desc    List all courses
+// All courses (admin or for reference)
 router.get('/', getCourses);
 
-// @route   GET /api/courses/:id
-// @desc    Get single course by ID
+// User-specific courses
+router.get('/for-user', getCoursesForUser);
+
+// Single course by ID
 router.get('/:id', getCourseById);
 
-// @route   POST /api/courses
-// @desc    Create a new course
+// Create course (userId must be provided in body)
 router.post('/', createCourse);
 
-// @route   PUT /api/courses/:id
-// @desc    Update a course
+// Update course
 router.put('/:id', updateCourse);
 
-// @route   DELETE /api/courses/:id
-// @desc    Delete a course
+// Delete course
 router.delete('/:id', deleteCourse);
 
 module.exports = router;

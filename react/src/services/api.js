@@ -28,6 +28,12 @@ async function apiRequest(endpoint, options = {}) {
     throw error
   }
 }
+export async function fetchOrCreateUserByEmail(email, name) {
+  return apiRequest(`/users/lookup/or-create?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+}
+export async function fetchCoursesForUser(userId) {
+  return apiRequest(`/courses/for-user?userId=${encodeURIComponent(userId)}`);
+}
 
 // User API
 export async function fetchUserById(userId) {
