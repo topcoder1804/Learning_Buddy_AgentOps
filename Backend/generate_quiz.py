@@ -1,6 +1,7 @@
 from groq import Groq
 from dotenv import load_dotenv
 import os
+import json
 
 # Load environment variables
 load_dotenv()
@@ -11,28 +12,39 @@ client = Groq(api_key=api_key)
 
 def generate_quiz(topic: str, model="mixtral-8x7b-32768"):
     prompt = f"""
-    Generate 5 multiple-choice questions (MCQs) on the topic: "{topic}".
-    Each question should have 4 options (a-d), and the correct answer should be clearly marked.
-    Format like this:
+    Create a JSON array of 5 multiple-choice questions (MCQs) on the topic "{topic}".
+    Each object should have:
+    - "question": The question text
+    - "options": An array of 4 options
+    - "answer": The correct answer text
+    - "hint": A short hint to help solve the question
 
-    Q1. Question text
-        a) Option A
-        b) Option B
-        c) Option C
-        d) Option D
-        Answer: b
+    Format strictly as valid JSON only. Do not include explanations outside the array.
     """
 
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are an expert quiz maker for educational content."},
-            {"role": "user", "content": prompt}
+            {
+                "role": "system",
+                "content": "You are an expert quiz generator that returns structured JSON for educational apps."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
         ]
     )
 
-    print(" Quiz Questions:\n")
-    print(response.choices[0].message.content)
+    content = response.choices[0].message.content.strip()
+
+    try:
+        quiz_data = json.loads(content)
+        print("Quiz in structured format:\n")
+        print(json.dumps(quiz_data, indent=2))
+    except json.JSONDecodeError:
+        print("Could not parse JSON. Raw output:")
+        print(content)
 
 if __name__ == "__main__":
     topic = input("Enter a topic for quiz generation: ")
