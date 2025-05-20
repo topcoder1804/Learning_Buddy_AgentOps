@@ -1,6 +1,10 @@
+const fs = require('fs');
+const path = require('path');
 const User = require('../models/User');
-const Assignment = require('../models/Assignment');
+const Course = require('../models/Course');
 const Quiz = require('../models/Quiz');
+const Assignment = require('../models/Assignment');
+
 
 exports.getUsers = async (req, res) => {
   try {
@@ -114,19 +118,83 @@ exports.getUserQuizProgress = async (req, res) => {
 
 exports.getOrCreateUserByEmail = async (req, res) => {
   const { email, name } = req.query;
+
   try {
     let user = await User.findOne({ email });
     if (!user) {
+      // 1) create the user
       user = new User({
         name: name || 'Unknown',
         email,
-        courses: [
-        ]
+        courses: []
       });
       await user.save();
+
+      // 2) load every mock course file
+      const prefillDir = path.join(__dirname, '../utils/PrefilledCourses');
+      const files = fs.readdirSync(prefillDir).filter(f => f.endsWith('.js'));
+
+      for (const file of files) {
+        const courseData = require(path.join(prefillDir, file));
+        // 3) create the Course
+        const course = new Course({
+          name:        courseData.name,
+          level:       courseData.level,
+          description: courseData.description,
+          tags:        courseData.tags,
+          messages:    courseData.messages,
+          resources:   courseData.resources,
+          quizzes:     [],       
+          assignments: [],       
+          createdBy:   user._id
+        });
+        await course.save();
+
+        // 4) create all quizzes for that course
+        let seq = 1;
+        for (const q of courseData.quizzes || []) {
+          const quiz = new Quiz({
+            course:   course._id,
+            questions: q.questions,
+            scores:    q.scores || [],
+            dueDate:   q.dueDate
+          });
+          await quiz.save();
+          course.quizzes.push({ quiz: quiz._id, sequenceNo: seq++ });
+        }
+
+        // 5) create all assignments for that course
+        seq = 1;
+        for (const a of courseData.assignments || []) {
+          const assignment = new Assignment({
+            course:     course._id,
+            question:   a.question,
+            dueDate:    a.dueDate,
+            submissions: a.submissions || [],
+            status:     a.status
+          });
+          await assignment.save();
+          course.assignments.push({ assignment: assignment._id, sequenceNo: seq++ });
+        }
+
+        // 6) save course with its quizzes & assignments
+        await course.save();
+
+        // 7) attach course to the user
+        user.courses.push({
+          course:      course._id,
+          status:      'Not Started',
+          startedAt:   null,
+          completedAt: null
+        });
+      }
+
+      await user.save();
     }
+
     res.json(user);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
