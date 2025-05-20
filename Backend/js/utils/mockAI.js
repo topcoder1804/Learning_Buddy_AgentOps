@@ -5,9 +5,54 @@ const aiMock = {
     level: "hard",
     description: "Understand AI concepts, machine learning, neural networks, and the rise of generative models.",
     tags: ["AI", "machine learning", "neural networks", "generative AI"],
-    messages: [],
-    quizzes: [],
-    assignments: [],
+    messages: [
+        {
+          type: "system",
+          message: "Hello! I'm your AI tutor. Ask me anything about artificial intelligence, machine learning, neural networks, or how AI is changing the world. I'm here to help you understand the future of technology!",
+          sequenceNo: 1
+        }
+      ],
+      quizzes: [
+        {
+          // topic: to be set to the AI course _id when inserted into DB
+          questions: [
+            {
+              question: "Which of the following is a subset of machine learning that uses multi-layer neural networks?",
+              answer: "Deep learning",
+              options: ["Supervised learning", "Unsupervised learning", "Deep learning", "Reinforcement learning"],
+              hint: "It's responsible for recent advances in image and language AI."
+            },
+            {
+              question: "Who is considered the father of artificial intelligence?",
+              answer: "Alan Turing",
+              options: ["Isaac Newton", "Alan Turing", "Albert Einstein", "Ada Lovelace"],
+              hint: "He proposed the famous 'imitation game' test."
+            },
+            {
+              question: "What is the main goal of supervised learning?",
+              answer: "To learn a mapping from inputs to outputs using labeled data",
+              options: [
+                "To find patterns in unlabeled data",
+                "To learn a mapping from inputs to outputs using labeled data",
+                "To maximize a cumulative reward",
+                "To generate new data samples"
+              ],
+              hint: "It requires labeled training examples."
+            }
+          ],
+          scores: [],
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        }
+      ],
+      assignments: [
+        {
+          // course: to be set to the AI course _id when inserted into DB
+          question: "Write a 300-word essay explaining the difference between supervised, unsupervised, and reinforcement learning, and give a real-world example of each.",
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+          submissions: [],
+          status: "Pending"
+        }
+      ],
     resources: [
       {
         videoLink: "https://www.youtube.com/embed/D2JY38VShxI",

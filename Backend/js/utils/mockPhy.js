@@ -5,9 +5,49 @@ const physicsMock = {
     level: "medium",
     description: "Explore the fundamental principles of physics, including motion, energy, forces, quantum mechanics, and field theory.",
     tags: ["science", "physics", "fundamentals"],
-    messages: [],
-    quizzes: [],
-    assignments: [],
+    messages: [
+        {
+          type: "system",
+          message: "Welcome! I'm your Physics tutor. Whether you have questions about motion, energy, forces, or quantum mechanics, I'm here to help you explore the wonders of the physical universe.",
+          sequenceNo: 1
+        }
+      ],
+      quizzes: [
+        {
+          // topic: to be set to the Physics course _id when inserted into DB
+          questions: [
+            {
+              question: "Who formulated the three laws of motion?",
+              answer: "Isaac Newton",
+              options: ["Albert Einstein", "Isaac Newton", "Galileo Galilei", "Niels Bohr"],
+              hint: "He also developed the law of universal gravitation."
+            },
+            {
+              question: "What is the unit of force in the International System (SI)?",
+              answer: "Newton",
+              options: ["Joule", "Pascal", "Newton", "Watt"],
+              hint: "It's named after a famous physicist."
+            },
+            {
+              question: "Which fundamental force is responsible for holding the nucleus together?",
+              answer: "Strong nuclear force",
+              options: ["Electromagnetic force", "Strong nuclear force", "Weak nuclear force", "Gravitational force"],
+              hint: "It's the strongest force but acts over a very short range."
+            }
+          ],
+          scores: [],
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        }
+      ],
+      assignments: [
+        {
+          // course: to be set to the Physics course _id when inserted into DB
+          question: "Describe the difference between kinetic energy and potential energy. Provide real-world examples of each and explain the principle of conservation of energy.",
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+          submissions: [],
+          status: "Pending"
+        }
+      ],
     resources: [
         {
           videoLink: "https://www.youtube.com/embed/ZAqIoDhornk",
