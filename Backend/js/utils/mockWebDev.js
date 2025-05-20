@@ -5,9 +5,54 @@ const webDevMock = {
     level: "medium",
     description: "Learn to build modern web applications using HTML, CSS, JavaScript, and frameworks. Covers front-end, back-end, databases, and deployment.",
     tags: ["web", "development", "javascript", "frontend", "backend"],
-    messages: [],
-    quizzes: [],
-    assignments: [],
+    messages: [
+        {
+          type: "system",
+          message: "Hi! I'm your Web Development tutor. Ask me anything about HTML, CSS, JavaScript, front-end and back-end frameworks, or how to build and deploy modern web applications. Let's code together!",
+          sequenceNo: 1
+        }
+      ],
+      quizzes: [
+        {
+          // topic: to be set to the Web Development course _id when inserted into DB
+          questions: [
+            {
+              question: "Which HTML tag is used to create a hyperlink?",
+              answer: "<a>",
+              options: ["<link>", "<a>", "<href>", "<hyperlink>"],
+              hint: "It's a one-letter tag."
+            },
+            {
+              question: "Which language is primarily used for styling web pages?",
+              answer: "CSS",
+              options: ["HTML", "JavaScript", "CSS", "Python"],
+              hint: "It stands for Cascading Style Sheets."
+            },
+            {
+              question: "What does 'API' stand for in web development?",
+              answer: "Application Programming Interface",
+              options: [
+                "Advanced Programming Integration",
+                "Application Programming Interface",
+                "Automated Page Index",
+                "Active Protocol Interface"
+              ],
+              hint: "It's how different software components communicate."
+            }
+          ],
+          scores: [],
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        }
+      ],
+      assignments: [
+        {
+          // course: to be set to the Web Development course _id when inserted into DB
+          question: "Build a simple personal portfolio website using HTML, CSS, and JavaScript. Include your name, a short bio, and links to your social profiles. Submit the code and a live deployment link.",
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+          submissions: [],
+          status: "Pending"
+        }
+      ],
     resources: [
       {
         videoLink: "https://www.youtube.com/embed/erEgovG9WBs",

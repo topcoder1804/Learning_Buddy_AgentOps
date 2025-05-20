@@ -5,9 +5,49 @@ const mathMock = {
     level: "hard",
     description: "Dive into advanced mathematical concepts including trigonometry, calculus, and the fundamental theorem of calculus.",
     tags: ["math", "algebra", "calculus", "trigonometry"],
-    messages: [],
-    quizzes: [],
-    assignments: [],
+    messages: [
+        {
+          type: "system",
+          message: "Hello! I'm your Math tutor. Whether you're tackling algebra, calculus, geometry, or problem-solving strategies, I'm here to guide you through every step. Ask me anything about mathematics!",
+          sequenceNo: 1
+        }
+      ],
+      quizzes: [
+        {
+          // topic: to be set to the Math course _id when inserted into DB
+          questions: [
+            {
+              question: "What is the value of π (pi) to two decimal places?",
+              answer: "3.14",
+              options: ["2.72", "3.14", "1.62", "1.41"],
+              hint: "It's the ratio of a circle's circumference to its diameter."
+            },
+            {
+              question: "If f(x) = x², what is f'(x)?",
+              answer: "2x",
+              options: ["x", "2x", "x²", "1/x"],
+              hint: "It's the derivative of x squared."
+            },
+            {
+              question: "Which triangle has side lengths 3, 4, and 5?",
+              answer: "Right triangle",
+              options: ["Equilateral triangle", "Isosceles triangle", "Right triangle", "Obtuse triangle"],
+              hint: "It satisfies the Pythagorean theorem."
+            }
+          ],
+          scores: [],
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        }
+      ],
+      assignments: [
+        {
+          // course: to be set to the Math course _id when inserted into DB
+          question: "Prove the Pythagorean theorem and provide an example of its use in solving a real-world problem.",
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+          submissions: [],
+          status: "Pending"
+        }
+      ],
     resources: [
       {
         videoLink: "https://www.youtube.com/embed/PUB0TaZ7bhA",
