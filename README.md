@@ -64,26 +64,26 @@ Integrated chatbot to answer context-specific questions using course materials.
 ## Screenshots
 
 ### Login Page
-![Login Page](Screenshots/login.jpeg)
+![Login Page](Screenshots/Login.jpeg)
 
 
 ### Courses
-![Courses](Screenshots/courses.jpeg)
+![Courses](Screenshots/Courses.jpeg)
 
 ### Profile Page
-![Profile Page](Screenshots/profile.jpeg)
+![Profile Page](Screenshots/Profile.jpeg)
 
 ### Quizzes
-![Quizzes](Screenshots/quizes.jpeg)
+![Quizzes](Screenshots/Quizes.jpeg)
 
 ### Assignments
-![Assignments](Screenshots/assignments.jpeg)
+![Assignments](Screenshots/Assignments.jpeg)
 
 ### Resources
-![Resources](Screenshots/resources.jpeg)
+![Resources](Screenshots/Resources.jpeg)
 
 ### 🤖 AI Tutor
-![AI Tutor](Screenshots/ai-tutor.jpeg)
+![AI Tutor](Screenshots/Ai-tutor.jpeg)
 
 ---
 
