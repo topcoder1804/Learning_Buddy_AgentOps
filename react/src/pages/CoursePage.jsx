@@ -341,7 +341,7 @@ function CoursePage() {
         {/* Left column */}
         <div className="w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
           <div className="flex border-b dark:border-gray-700 mb-4">
-            <button
+            {/*<button
               onClick={() => setActiveTab("messages")}
               className={`px-4 py-2 font-medium text-sm ${activeTab === "messages"
                 ? "border-b-2 border-blue-500 text-blue-500"
@@ -349,7 +349,7 @@ function CoursePage() {
                 }`}
             >
               Messages
-            </button>
+            </button> */}
             <button
               onClick={() => setActiveTab("quizzes")}
               className={`px-4 py-2 font-medium text-sm ${activeTab === "quizzes"
