@@ -69,9 +69,6 @@ Graphical progress indicators help learners stay consistent and on track through
 - User progress tracking and profile updates
 - MongoDB models for structured data storage
 
-### Cloudflare Worker
-- Integrates AI via vector embeddings for smarter recommendations
-- Used for efficient serverless operations and vector handling
 
 ## Frontend (React + Vite)
 - Authentication and structured routing (Private & Public Layouts)
@@ -109,12 +106,6 @@ npm install <br>
 npm run dev <br> 
 
 
-### Cloudflare worker
-Configure and deploy using Wrangler:<br>
-cd cloudflare-worker <br>
-npm install <br>
-wrangler publish <br> ---
-
 ## Authentication
 - Clerk is used for user authentication (SSO support)
 - Auth middleware is integrated into protected routes
@@ -126,7 +117,6 @@ wrangler publish <br> ---
 - **Frontend**: React, Vite  
 - **Backend**: Node.js, Express.js, MongoDB  
 - **Auth**: Clerk  
-- **AI/Embedding**: Cloudflare Workers  
 - **Other**: Groq integration, REST API
 
 ---
