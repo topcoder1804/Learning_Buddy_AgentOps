@@ -3,9 +3,49 @@ const chemistryMock = {
     level: "easy",
     description: "A comprehensive introduction to chemistry, covering atoms, molecules, reactions, and the foundations of organic and inorganic chemistry.",
     tags: ["science", "chemistry", "basics"],
-    messages: [],
-    quizzes: [],
-    assignments: [],
+    messages: [
+        {
+          type: "system",
+          message: "Hello! I'm your Chemistry tutor. Ask me anything about atoms, molecules, reactions, or concepts from your Chemistry course. I'm here to help you understand and enjoy Chemistry!",
+          sequenceNo: 1
+        }
+      ],
+      quizzes: [
+        {
+          // topic will be set to the Chemistry course _id when inserted into DB
+          questions: [
+            {
+              question: "What is the smallest unit of a chemical element that retains its properties?",
+              answer: "Atom",
+              options: ["Molecule", "Atom", "Electron", "Compound"],
+              hint: "It's the building block of matter."
+            },
+            {
+              question: "Which of the following is NOT a noble gas?",
+              answer: "Nitrogen",
+              options: ["Helium", "Neon", "Argon", "Nitrogen"],
+              hint: "It's essential for life and makes up most of Earth's atmosphere."
+            },
+            {
+              question: "What type of bond involves the sharing of electron pairs between atoms?",
+              answer: "Covalent bond",
+              options: ["Ionic bond", "Covalent bond", "Metallic bond", "Hydrogen bond"],
+              hint: "This type of bond is common in organic molecules."
+            }
+          ],
+          scores: [],
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        }
+      ],
+      assignments: [
+        {
+          // course will be set to the Chemistry course _id when inserted into DB
+          question: "Write a 300-word essay explaining the difference between ionic and covalent bonds, and give two examples of each.",
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+          submissions: [],
+          status: "Pending"
+        }
+      ],
     resources: [
         {
           videoLink: "https://www.youtube.com/embed/5iTOphGnCtg",
