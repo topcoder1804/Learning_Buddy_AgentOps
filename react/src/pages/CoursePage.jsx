@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
@@ -61,6 +60,10 @@ function CoursePage() {
             ...localCourse,
           }))
         }
+
+        const res = await fetch(`http://localhost:8080/api/courses/${id}/messages`);
+        const messages = await res.json();
+        setCourse(prev => ({ ...prev, messages }));
       } catch (error) {
         console.error("Error loading course:", error)
         toast.error("Failed to load course")
@@ -133,8 +136,9 @@ function CoursePage() {
 
       // Update localStorage
       const savedQuizzes = JSON.parse(localStorage.getItem("quizzes") || "[]")
+      const updated = [...savedQuizzes, quiz]
       localStorage.setItem("quizzes", JSON.stringify([...savedQuizzes, quiz]))
-
+      setQuizzes(updated.filter(q => q.course === id))
       toast.success("Quiz generated successfully!")
       setActiveTab("quizzes")
     } catch (error) {
@@ -279,7 +283,7 @@ function CoursePage() {
                   quizzes.length ? (
                     quizzes.map((quiz, i) => (
                       <div key={quiz._id} className="border rounded p-4 mb-4">
-                        <h3 className="font-bold">{quiz.topic}</h3>
+                        <h3 className="font-bold">Let's try quiz - {i}</h3>
                         <p className="text-sm">{quiz.questions.length} questions</p>
                         <button
                           className="mt-2 text-blue-500"
