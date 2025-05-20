@@ -72,16 +72,17 @@ exports.deleteQuiz = async (req, res) => {
 // POST /api/quizzes/:id/score
 exports.addScore = async (req, res) => {
   try {
-    const { user, score } = req.body;
+    const { score } = req.body;
     const quiz = await Quiz.findById(req.params.id);
     if (!quiz) return res.status(404).json({ msg: 'Quiz not found' });
-    quiz.scores.push({ user, score, time: new Date() });
+    quiz.scores.push({ score, time: new Date() });
     await quiz.save();
-    res.json(quiz);
+    return res.json(quiz);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return res.status(400).json({ error: err.message });
   }
 };
+
 
 
 // POST /api/quizzes/generate

@@ -24,6 +24,8 @@ function CoursePage() {
   const [selectedAssignment, setSelectedAssignment] = useState(null)
   const [answerText, setAnswerText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showAnswers, setShowAnswers] = useState(false)
+
 
   const [answerModalContent, setAnswerModalContent] = useState("")
   const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
@@ -51,11 +53,11 @@ function CoursePage() {
   }, [activeTab])
 
   useEffect(() => {
-    const all = JSON.parse(localStorage.getItem("quizzes")||"[]")
+    const all = JSON.parse(localStorage.getItem("quizzes") || "[]")
     // each quiz in LS has a `.scores` array
     setQuizzes(all.filter(q => q.course === id))
   }, [activeTab, id])
-  
+
 
   useEffect(() => {
     const all = JSON.parse(localStorage.getItem("assignments") || "[]")
@@ -153,6 +155,50 @@ function CoursePage() {
       toast.error("Failed to get AI response.");
     }
   };
+
+
+  async function handleSubmitQuiz() {
+    if (!takingQuiz) return;
+
+    // 1) compute your score locally:
+    let correct = 0
+    takingQuiz.questions.forEach((q, i) => {
+      if (answers[i] === q.answer) correct++
+    })
+
+    // 2) post it to your API
+    const res = await fetch(
+      `http://localhost:8080/api/quizzes/${takingQuiz._id}/score`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score: correct })
+      }
+    )
+    if (!res.ok) {
+      toast.error("Failed to submit score")
+      return
+    }
+    const updated = await res.json()   // updated quiz with new `.scores` array
+
+    toast.success(`You scored ${correct}/${takingQuiz.questions.length}`)
+
+    // 3) update React state
+    setTakingQuiz(updated)
+    setScore(correct)
+
+    // 4) persist back to localStorage
+    const stored = JSON.parse(localStorage.getItem("quizzes") || "[]")
+    const merged = stored.map(q =>
+      q._id === updated._id ? updated : q
+    )
+    localStorage.setItem("quizzes", JSON.stringify(merged))
+
+    // 5) also refresh the list
+    setQuizzes(qs => qs.map(q => q._id === updated._id ? updated : q))
+  }
+
+
 
   async function handleSubmitAssignment() {
     if (!selectedAssignment || !answerText.trim()) return
@@ -349,76 +395,89 @@ function CoursePage() {
             {activeTab === "quizzes" && (
               <div>
                 {!takingQuiz ? (
-                  // Quiz list
-                  quizzes.length ? (
-                    quizzes.map((quiz, i) => (
-                      <div key={quiz._id} className="border rounded p-4 mb-4">
-                        <h3 className="font-bold">Let's try quiz - {i}</h3>
-                        <p className="text-sm">{quiz.questions.length} questions</p>
-                        <button
-                          className="mt-2 text-blue-500"
-                          onClick={() => startQuiz(quiz)}
-                        >
-                          Take Quiz
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-500">No quizzes yet. Generate one!</div>
-                  )
+                  // — quiz list —
+                  quizzes.map(q => (
+                    <div key={q._id} className="border rounded p-4 mb-4">
+                      <h3 className="font-bold">{q.questions.length} questions</h3>
+                      <button onClick={() => { startQuiz(q); setShowAnswers(false) }} className="text-blue-500">
+                        Take Quiz
+                      </button>
+                    </div>
+                  ))
                 ) : (
-                  // Quiz question form
-                  <form onSubmit={e => { e.preventDefault(); submitQuiz() }}>
-                    {takingQuiz.questions.map((q, idx) => (
-                      <fieldset key={idx} className="mb-6">
-                        <legend className="font-medium">{idx + 1}. {q.question}</legend>
+                  // — quiz detail & submit —
+                  <div className="space-y-4">
+                    {takingQuiz.questions.map((q, i) => (
+                      <fieldset key={i} className="mb-4">
+                        <legend className="font-medium">{i + 1}. {q.question}</legend>
                         {q.options.map(opt => (
                           <label key={opt} className="block ml-4">
                             <input
                               type="radio"
-                              name={`q${idx}`}
+                              name={`q${i}`}
                               value={opt}
-                              checked={answers[idx] === opt}
-                              onChange={() => handleAnswerChange(idx, opt)}
+                              checked={answers[i] === opt}
+                              onChange={() => setAnswers(a => ({ ...a, [i]: opt }))}
                               className="mr-2"
                             />
                             {opt}
                           </label>
                         ))}
-                        <p className="text-xs text-gray-500 italic">Hint: {q.hint}</p>
+                        {showAnswers && score != null && (
+                          <p className="mt-2 text-green-600">Answer: {q.answer}</p>
+                        )}
                       </fieldset>
                     ))}
 
-                    <button
-                      type="submit"
-                      className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
-                      disabled={Object.keys(answers).length !== takingQuiz.questions.length}
-                    >
-                      Submit Quiz
-                    </button>
-                    <button
-                      type="button"
-                      className="ml-2 text-red-500"
-                      onClick={() => {
-                        setTakingQuiz(null)
-                        setScore(null)
-                        setAnswers({})
-                        toast(`Quiz canceled`, { icon: '✋' })
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </form>
-                )}
+                    <div className="flex space-x-2">
+                      <button
+                        disabled={Object.keys(answers).length !== takingQuiz.questions.length}
+                        onClick={handleSubmitQuiz}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                      >
+                        {score == null ? "Submit Quiz" : "Retake Quiz"}
+                      </button>
 
-                {takingQuiz && score !== null && (
-                  <div className="mt-4 p-4 bg-blue-100 rounded">
-                    You scored <strong>{score}</strong> out of <strong>{takingQuiz.questions.length}</strong>!
+                      <button
+                        onClick={() => {
+                          setTakingQuiz(null)
+                          setAnswers({})
+                          setScore(null)
+                          setShowAnswers(false)
+                        }}
+                        className="text-red-500 px-4 py-2"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        disabled={!takingQuiz.scores?.length}
+                        onClick={() => setShowAnswers(v => !v)}
+                        className="text-blue-500 px-4 py-2 disabled:opacity-50"
+                      >
+                        {showAnswers ? "Hide Answers" : "Show Answers"}
+                      </button>
+                    </div>
+
+                    {/* — past attempts below buttons — */}
+                    {takingQuiz.scores?.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="font-medium">Past Attempts</h4>
+                        <ul className="list-disc list-inside text-sm text-gray-700">
+                          {takingQuiz.scores.map((s, idx) => (
+                            <li key={idx}>
+                              <strong>Score:</strong> {s.score}/{takingQuiz.questions.length}&nbsp;
+                              <span className="text-gray-500">{new Date(s.time).toLocaleString()}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
-
               </div>
             )}
+
 
 
             {activeTab === "assignments" && (
