@@ -147,3 +147,14 @@ exports.chatWithGroq = async (req, res) => {
 };
 
 
+exports.getCourseMessages = async (req, res) => {
+  try {
+    // Only load the messages array
+    const course = await Course.findById(req.params.id).select('messages');
+    if (!course) return res.status(404).json({ error: 'Course not found' });
+    res.json(course.messages);
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
