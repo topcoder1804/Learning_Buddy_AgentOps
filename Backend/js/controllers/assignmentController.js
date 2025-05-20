@@ -1,5 +1,9 @@
 const Assignment = require('../models/Assignment');
 
+const Groq = require('groq-sdk');
+const Course = require('../models/Course');
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
 // GET /api/assignments
 exports.getAssignments = async (req, res) => {
   try {
@@ -68,66 +72,118 @@ exports.deleteAssignment = async (req, res) => {
 // POST /api/assignments/:id/submission
 exports.addSubmission = async (req, res) => {
   try {
-    const { user, userAnswer, score } = req.body;
-    const assignment = await Assignment.findById(req.params.id);
-    if (!assignment) return res.status(404).json({ msg: 'Assignment not found' });
-    assignment.submissions.push({ user, userAnswer, score, time: new Date() });
-    assignment.status = 'Completed';  // or adjust logic as needed
-    await assignment.save();
-    res.json(assignment);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+    const { answer } = req.body
+    const assignment = await Assignment.findById(req.params.id)
+    if (!assignment) {
+      return res.status(404).json({ msg: 'Assignment not found' })
+    }
 
-const Groq = require('groq-sdk');
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    // 1) Grab the original question
+    const questionText = assignment.question
+
+    // 2) Ask Groq to grade it from 0–100
+    const gradingPrompt = `
+You are an expert grader. 
+Grade the student’s answer on a scale from 0 to 100 (integer only).
+Question: "${questionText}"
+Student Answer: "${answer}"
+Respond with only the numeric score.
+    `.trim()
+
+    const gradingRes = await groq.chat.completions.create({
+      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+      messages: [
+        { role: "system", content: "You are an expert grader." },
+        { role: "user",   content: gradingPrompt }
+      ]
+    })
+
+    const rawScore = gradingRes.choices[0].message.content.trim()
+    // parse integer, clamp between 0–100
+    let score = parseInt(rawScore, 10)
+    if (isNaN(score)) score = 0
+    score = Math.max(0, Math.min(100, score))
+
+    // 3) Push the submission
+    assignment.submissions.push({
+      userAnswer: answer,
+      score,
+      time: new Date()
+    })
+    assignment.status = 'Completed'
+
+    await assignment.save()
+
+    // 4) Return the updated assignment
+    return res.json(assignment)
+  } catch (err) {
+    console.error("addSubmission error:", err)
+    return res.status(500).json({ error: err.message })
+  }
+}
 
 exports.generateAssignment = async (req, res) => {
-  const { topic, course, dueDate } = req.body;
+  const { courseId, dueDate } = req.body;
+
+  // 1) Find the course
+  const course = await Course.findById(courseId);
+  if (!course) {
+    return res.status(404).json({ error: 'Course not found' });
+  }
+
+  // 2) Build context from its messages
+  const convoContext = course.messages
+    .sort((a, b) => a.sequenceNo - b.sequenceNo)
+    .map(m => `#${m.sequenceNo} [${m.type}]: ${m.message}`)
+    .join('\n');
+
+  // 3) Prompt for **one** descriptive assignment question
   const prompt = `
-Generate 5 descriptive assignment-style questions on the topic: "${topic}".
-The questions should encourage critical thinking and explanation.
-Return only the questions as a numbered list.
-  `;
+Using the following chat history as context, 
+generate **one** descriptive, open-ended assignment-style question
+on the topic "${course.name}". 
+The question should prompt critical thinking and detailed explanation.
+Return only the question text, no numbering or extra commentary.
+
+Context:
+${convoContext}
+  `.trim();
+
   try {
+    // 4) Call your LLM
     const response = await groq.chat.completions.create({
       model: "meta-llama/llama-4-maverick-17b-128e-instruct",
       messages: [
-        {
-          role: "system",
-          content: "You are an educational assistant creating assignment questions."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
+        { role: "system", content: "You are an educational assistant crafting assignment questions." },
+        { role: "user",   content: prompt }
       ]
     });
 
-    const questionsText = response.choices[0].message.content.trim();
-    const questions = questionsText.split(/\n\d+\.\s/).filter(q => q.trim() !== "");
-    if (questions.length && questions[0].trim() === "") questions.shift();
+    // 5) Extract the generated question
+    const questionText = response.choices[0].message.content.trim();
 
-    // Optionally, create assignments in DB for each question:
-    const now = new Date();
-    const defaultDue = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const due = dueDate ? new Date(dueDate) : defaultDue;
+    // 6) Create + save the Assignment
+    const now       = new Date();
+    const defaultDue= new Date(now.getTime() + 7*24*60*60*1000);
+    const assignment= new Assignment({
+      course:  course._id,
+      question: questionText,
+      dueDate: dueDate ? new Date(dueDate) : defaultDue
+    });
+    await assignment.save();
 
-    const assignments = await Promise.all(
-      questions.map(async (question) => {
-        const assignment = new Assignment({
-          course,
-          question,
-          dueDate: due
-        });
-        await assignment.save();
-        return assignment;
-      })
-    );
+    // 7) Associate it on the Course
+    course.assignments.push({
+      assignment: assignment._id,
+      sequenceNo: course.assignments.length + 1
+    });
+    await course.save();
 
-    res.status(201).json(assignments);
+    // 8) Return the single assignment object
+    return res.status(201).json(assignment);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("generateAssignment error:", err);
+    return res.status(500).json({ error: err.message });
   }
 };

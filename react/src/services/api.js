@@ -164,7 +164,7 @@ export async function generateAssignment(courseId) {
 
   // Try to call the API
   try {
-    return await apiRequest("/assignments", {
+    return await apiRequest("/assignments/generate", {
       method: "POST",
       body: JSON.stringify({ courseId }),
     })
