@@ -21,15 +21,12 @@ function QuizRunner() {
     const loadQuiz = async () => {
       try {
         setIsLoading(true)
-
-        // Try to get from localStorage first
         const savedQuizzes = JSON.parse(localStorage.getItem("quizzes") || "[]")
         const localQuiz = savedQuizzes.find((q) => q._id === id)
 
         if (localQuiz) {
           setQuiz(localQuiz)
         } else {
-          // Fallback to API
           const quizData = await fetchQuizById(id)
           setQuiz(quizData)
         }
@@ -62,12 +59,10 @@ function QuizRunner() {
     try {
       setIsSubmitting(true)
 
-      // Calculate score
       let correctCount = 0
       const questionResults = quiz.questions.map((question, index) => {
         const isCorrect = answers[index] === question.answer
         if (isCorrect) correctCount++
-
         return {
           question: question.question,
           userAnswer: answers[index],
@@ -78,14 +73,12 @@ function QuizRunner() {
 
       const score = (correctCount / quiz.questions.length) * 100
 
-      // Submit score to API
       await submitQuizScore(id, {
         userId: user.id,
         score,
         answers: Object.values(answers),
       })
 
-      // Save to localStorage
       const savedScores = JSON.parse(localStorage.getItem("quizScores") || "[]")
       const newScore = {
         quizId: id,
@@ -95,7 +88,6 @@ function QuizRunner() {
       }
       localStorage.setItem("quizScores", JSON.stringify([...savedScores, newScore]))
 
-      // Show results
       setResult({
         score,
         correctCount,
@@ -113,7 +105,7 @@ function QuizRunner() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
       </div>
     )
   }
@@ -121,58 +113,50 @@ function QuizRunner() {
   if (!quiz) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-medium mb-2">Quiz not found</h2>
-        <p className="text-gray-500 dark:text-gray-400">The quiz you're looking for doesn't exist</p>
+        <h2 className="text-xl font-semibold text-red-500">Quiz not found</h2>
+        <p className="text-gray-500 dark:text-gray-400">Please check the link or try again later.</p>
       </div>
     )
   }
 
   if (result) {
     return (
-      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold mb-6">Quiz Results</h1>
-
-        <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center">
-          <h2 className="text-xl mb-2">Your Score: {result.score.toFixed(1)}%</h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            You got {result.correctCount} out of {result.total} questions correct
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8 space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-blue-600">Quiz Results</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
+            You scored <span className="font-bold">{result.score.toFixed(1)}%</span> ({result.correctCount}/{result.total})
           </p>
         </div>
 
-        <div className="space-y-6">
-          {result.questionResults.map((qResult, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg ${
-                qResult.isCorrect
-                  ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900"
-                  : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900"
-              }`}
-            >
-              <h3 className="font-medium mb-2">
-                Question {index + 1}: {qResult.question}
-              </h3>
-              <p className="mb-1">
-                <span className="font-medium">Your answer:</span> {qResult.userAnswer}
-              </p>
-              {!qResult.isCorrect && (
+        {result.questionResults.map((q, index) => (
+          <div
+            key={index}
+            className={`transition-all duration-200 p-5 rounded-lg border shadow-sm ${
+              q.isCorrect
+                ? "bg-green-50 dark:bg-green-900/20 border-green-200"
+                : "bg-red-50 dark:bg-red-900/20 border-red-200"
+            }`}
+          >
+            <h3 className="text-lg font-medium mb-2">Q{index + 1}. {q.question}</h3>
+            <p><strong>Your Answer:</strong> {q.userAnswer}</p>
+            {!q.isCorrect && (
+              <>
                 <p className="text-green-600 dark:text-green-400">
-                  <span className="font-medium">Correct answer:</span> {qResult.correctAnswer}
+                  <strong>Correct:</strong> {q.correctAnswer}
                 </p>
-              )}
-              {quiz.questions[index].hint && !qResult.isCorrect && (
-                <p className="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                  <span className="font-medium">Hint:</span> {quiz.questions[index].hint}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+                {quiz.questions[index].hint && (
+                  <p className="text-sm mt-1 text-gray-500 italic">Hint: {quiz.questions[index].hint}</p>
+                )}
+              </>
+            )}
+          </div>
+        ))}
 
-        <div className="mt-8 flex justify-between">
+        <div className="flex justify-between mt-6">
           <button
             onClick={() => navigate(`/course/${quiz.course}`)}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm px-5 py-2 rounded-md"
           >
             Back to Course
           </button>
@@ -181,7 +165,7 @@ function QuizRunner() {
               setResult(null)
               setAnswers({})
             }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md text-sm"
           >
             Retry Quiz
           </button>
@@ -191,58 +175,53 @@ function QuizRunner() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-      <h1 className="text-2xl font-bold mb-2">{quiz.topic}</h1>
-      <p className="text-gray-600 dark:text-gray-300 mb-6">
-        Answer all {quiz.questions.length} questions to complete this quiz
-      </p>
+    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8 space-y-8">
+      <h1 className="text-3xl font-bold text-blue-600">{quiz.topic}</h1>
+      <p className="text-gray-600 dark:text-gray-400">Complete all {quiz.questions.length} questions below.</p>
 
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-8">
-          {quiz.questions.map((question, qIndex) => (
-            <div key={qIndex} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-              <h2 className="text-lg font-medium mb-4">
-                {qIndex + 1}. {question.question}
-              </h2>
-
-              <div className="space-y-2">
-                {question.options.map((option, oIndex) => (
-                  <label
-                    key={oIndex}
-                    className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
-                      answers[qIndex] === option
-                        ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
-                        : "border-gray-200 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${qIndex}`}
-                      value={option}
-                      checked={answers[qIndex] === option}
-                      onChange={() => handleAnswerChange(qIndex, option)}
-                      className="mr-3"
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
+      <form onSubmit={handleSubmit} className="space-y-10">
+        {quiz.questions.map((question, qIndex) => (
+          <div key={qIndex} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-medium mb-4">
+              {qIndex + 1}. {question.question}
+            </h2>
+            <div className="grid gap-2">
+              {question.options.map((option, oIndex) => (
+                <label
+                  key={oIndex}
+                  className={`flex items-center px-4 py-3 rounded-md border transition-colors duration-150 ${
+                    answers[qIndex] === option
+                      ? "bg-blue-50 border-blue-400 dark:bg-blue-900/30 dark:border-blue-600"
+                      : "border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name={`question-${qIndex}`}
+                    value={option}
+                    checked={answers[qIndex] === option}
+                    onChange={() => handleAnswerChange(qIndex, option)}
+                    className="mr-3"
+                  />
+                  {option}
+                </label>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
 
-        <div className="mt-8 flex justify-between">
+        <div className="flex justify-end gap-4">
           <button
             type="button"
             onClick={() => navigate(`/course/${quiz.course}`)}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="bg-gray-200 dark:bg-gray-700 text-sm px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting || Object.keys(answers).length < quiz.questions.length}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
           >
             {isSubmitting ? "Submitting..." : "Submit Answers"}
           </button>
