@@ -8,15 +8,17 @@ const {
   updateCourse,
   deleteCourse,
   chatWithGroq, 
-  getCourseMessages
+  getCourseMessages,
+  getCourseRecommendations
 } = require('../controllers/courseController');
 
+router.get('/recommendations', getCourseRecommendations);
+router.get('/for-user', getCoursesForUser);
 // All courses (admin or for reference)
 router.get('/', getCourses);
 router.post('/:id/chat', chatWithGroq);
 
 // User-specific courses
-router.get('/for-user', getCoursesForUser);
 
 // Single course by ID
 router.get('/:id', getCourseById);
