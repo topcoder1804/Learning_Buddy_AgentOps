@@ -132,7 +132,7 @@ export async function generateQuiz(courseId) {
 
   // Try to call the API
   try {
-    return await apiRequest("/quizzes", {
+    return await apiRequest("/quizzes/generate", {
       method: "POST",
       body: JSON.stringify({ courseId }),
     })
