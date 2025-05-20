@@ -46,23 +46,23 @@ A full-stack intelligent learning assistant platform that helps users manage cou
 ## Setup Instructions
 
 ### Backend
-cd Backend
-npm install
-cp .env.example .env   # Set your MongoDB URI and Clerk keys here
-npm start
+cd Backend <br>
+npm install <br>
+cp .env.example .env   # Set your MongoDB URI and Clerk keys here <br>
+npm start <br>
 
 
 ### Frontend
-cd react
-npm install
-npm run dev
+cd react <br>
+npm install <br>
+npm run dev <br>
 
 
 ### Cloudflare worker
 Configure and deploy using Wrangler:<br>
-cd cloudflare-worker
-npm install
-wrangler publish
+cd cloudflare-worker <br>
+npm install <br>
+wrangler publish <br>
 
 ## Authentication
 - Clerk is used for user authentication (SSO support)
