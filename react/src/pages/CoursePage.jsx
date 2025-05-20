@@ -11,7 +11,7 @@ function CoursePage() {
   const { user } = useUser()
   const [backendUser, setBackendUser] = useState(null)
   const [course, setCourse] = useState(null)
-  const [activeTab, setActiveTab] = useState("quizzes")
+  const [activeTab, setActiveTab] = useState("resources")
   const [isLoading, setIsLoading] = useState(true)
   const [newMessage, setNewMessage] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -78,20 +78,42 @@ function CoursePage() {
         const courseData = await fetchCourseById(id)
         setCourse(courseData)
 
-        // Also check localStorage...
+        // --- SYNC LOCALSTORAGE ---
+
+        // Extract the raw quiz objects
+        const fetchedQuizzes = (courseData.quizzes || []).map(({ quiz }) => quiz)
+        // Merge with any existing, but overwrite any for this course
+        const savedQuizzes = JSON.parse(localStorage.getItem("quizzes") || "[]")
+        const otherQuizzes = savedQuizzes.filter(q => q.course !== id)
+        localStorage.setItem(
+          "quizzes",
+          JSON.stringify([...otherQuizzes, ...fetchedQuizzes])
+        )
+
+        // Same for assignments
+        const fetchedAssignments = (courseData.assignments || []).map(({ assignment }) => assignment)
+        const savedAssignments = JSON.parse(localStorage.getItem("assignments") || "[]")
+        const otherAssignments = savedAssignments.filter(a => a.course !== id)
+        localStorage.setItem(
+          "assignments",
+          JSON.stringify([...otherAssignments, ...fetchedAssignments])
+        )
+
+        // (Optional) Save the active course itself
         const savedCourses = JSON.parse(localStorage.getItem("courses") || "[]")
-        const localCourse = savedCourses.find((c) => c._id === id)
+        const otherCourses = savedCourses.filter(c => c._id !== id)
+        localStorage.setItem(
+          "courses",
+          JSON.stringify([courseData, ...otherCourses])
+        )
+        localStorage.setItem("activeCourse", JSON.stringify(courseData))
 
-        if (localCourse) {
-          setCourse((prev) => ({
-            ...prev,
-            ...localCourse,
-          }))
-        }
+        // --- END LOCALSTORAGE SYNC ---
 
-        const res = await fetch(`http://localhost:8080/api/courses/${id}/messages`);
-        const messages = await res.json();
-        setCourse(prev => ({ ...prev, messages }));
+        // load messages
+        const res = await fetch(`http://localhost:8080/api/courses/${id}/messages`)
+        const messages = await res.json()
+        setCourse(prev => ({ ...prev, messages }))
       } catch (error) {
         console.error("Error loading course:", error)
         toast.error("Failed to load course")
@@ -99,8 +121,10 @@ function CoursePage() {
         setIsLoading(false)
       }
     }
+
     loadCourse()
   }, [id])
+
 
   // Scroll to bottom of chat when messages change
   useEffect(() => {
@@ -372,11 +396,10 @@ function CoursePage() {
             {/* RESOURCES TAB ADDED HERE */}
             <button
               onClick={() => setActiveTab("resources")}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "resources"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
+              className={`px-4 py-2 font-medium text-sm ${activeTab === "resources"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                }`}
             >
               Resources
             </button>
@@ -515,7 +538,20 @@ function CoursePage() {
                   // --- selected assignment + submit form ---
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold">Assignment</h3>
-                    <p className="whitespace-pre-wrap border p-3 rounded bg-gray-50">{selectedAssignment.question}</p>
+                    <p
+                      className="
+                                whitespace-pre-wrap
+                                border
+                                p-3
+                                rounded
+                                bg-gray-50       /* light mode bg */
+                                text-gray-900    /* light mode text */
+                                dark:bg-gray-700 /* dark mode bg */
+                                dark:text-gray-100 /* dark mode text */
+                              "
+                    >
+                      {selectedAssignment.question}
+                    </p>
 
                     <textarea
                       rows={6}
