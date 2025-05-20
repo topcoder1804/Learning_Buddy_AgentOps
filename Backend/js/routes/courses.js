@@ -6,7 +6,8 @@ const {
   getCourseById,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  chatWithGroq
 } = require('../controllers/courseController');
 
 // All courses (admin or for reference)
@@ -26,5 +27,7 @@ router.put('/:id', updateCourse);
 
 // Delete course
 router.delete('/:id', deleteCourse);
+
+router.post('/:id/chat', chatWithGroq);
 
 module.exports = router;

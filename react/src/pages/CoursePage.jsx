@@ -70,68 +70,32 @@ function CoursePage() {
     }
   }, [course?.messages, activeTab])
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault()
-    if (!newMessage.trim()) return
-
-    // Create a new message object
-    const message = {
-      type: "user",
-      message: newMessage,
-      sequenceNo: (course?.messages?.length || 0) + 1,
-    }
-    // Update local state
-    const updatedMessages = [...(course?.messages || []), message]
-    setCourse((prev) => ({
-      ...prev,
-      messages: updatedMessages,
-    }))
-
-    // Update localStorage
-    const savedCourses = JSON.parse(localStorage.getItem("courses") || "[]")
-    const updatedCourses = savedCourses.map((c) => {
-      if (c._id === id) {
-        return {
-          ...c,
-          messages: updatedMessages,
-        }
-      }
-      return c
+  async function sendCourseMessage(courseId, userMessage) {
+    const res = await fetch(`/api/courses/${courseId}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMessage })
     })
-    localStorage.setItem("courses", JSON.stringify(updatedCourses))
-
-    // Clear input
-    setNewMessage("")
-
-    // TODO: Send to API and get AI response
-    // For now, simulate an AI response after a delay
-    setTimeout(() => {
-      const aiResponse = {
-        type: "system",
-        message: `I received your message: "${message.message}". How can I help you with this course?`,
-        sequenceNo: message.sequenceNo + 1,
-      }
-
-      const updatedWithAiMessages = [...updatedMessages, aiResponse]
-      setCourse((prev) => ({
-        ...prev,
-        messages: updatedWithAiMessages,
-      }))
-
-      // Update localStorage again
-      const savedCoursesAgain = JSON.parse(localStorage.getItem("courses") || "[]")
-      const updatedCoursesAgain = savedCoursesAgain.map((c) => {
-        if (c._id === id) {
-          return {
-            ...c,
-            messages: updatedWithAiMessages,
-          }
-        }
-        return c
-      })
-      localStorage.setItem("courses", JSON.stringify(updatedCoursesAgain))
-    }, 1000)
+    return await res.json()
   }
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+  
+    try {
+      // Send the user message to the backend and get AI reply + updated messages (with correct sequence numbers)
+      const { reply, messages } = await sendCourseMessage(course._id, newMessage);
+  
+      // Update local state with the latest messages from backend
+      setCourse(prev => ({ ...prev, messages }));
+  
+      setNewMessage("");
+    } catch (error) {
+      toast.error("Failed to get AI response.");
+    }
+  };
+  
 
   const handleGenerateQuiz = async () => {
     try {

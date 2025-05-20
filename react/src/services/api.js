@@ -47,6 +47,13 @@ export async function updateUser(userId, userData) {
   })
 }
 
+export async function sendCourseMessage(courseId, userMessage) {
+  return apiRequest(`/courses/${courseId}/chat`, {
+    method: "POST",
+    body: JSON.stringify({ message: userMessage }),
+  });
+}
+
 export async function fetchUserProgress(userId) {
   // In a real app, this would be an API call
   // For now, we'll use localStorage
