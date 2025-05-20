@@ -1,4 +1,3 @@
-// utils/mathMock.js
 
 const mathMock = {
     name: "Mathematics",

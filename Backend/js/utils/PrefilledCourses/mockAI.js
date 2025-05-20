@@ -1,4 +1,3 @@
-// utils/aiMock.js
 
 const aiMock = {
     name: "Artificial Intelligence",
