@@ -99,7 +99,6 @@ function CoursePage() {
         setIsLoading(false)
       }
     }
-
     loadCourse()
   }, [id])
 
@@ -249,7 +248,6 @@ function CoursePage() {
     try {
       setIsGenerating(true)
       const quiz = await generateQuiz(id)
-
       // Update localStorage
       const savedQuizzes = JSON.parse(localStorage.getItem("quizzes") || "[]")
       const updated = [...savedQuizzes, quiz]
@@ -338,8 +336,8 @@ function CoursePage() {
       </header>
 
       <div className="flex flex-1 gap-4 overflow-hidden">
-        {/* Left column */}
-        <div className="w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
+        {/* Left column - now w-2/5 */}
+        <div className="w-2/5 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
           <div className="flex border-b dark:border-gray-700 mb-4">
             {/*<button
               onClick={() => setActiveTab("messages")}
@@ -367,6 +365,28 @@ function CoursePage() {
                 }`}
             >
               Assignments
+            </button>
+            {/* RESOURCES TAB ADDED HERE */}
+            <button
+              onClick={() => setActiveTab("resources")}
+              className={`px-4 py-2 font-medium text-sm ${
+                activeTab === "resources"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              Resources
+            </button>
+            {/* RESOURCES TAB ADDED HERE */}
+            <button
+              onClick={() => setActiveTab("resources")}
+              className={`px-4 py-2 font-medium text-sm ${
+                activeTab === "resources"
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              Resources
             </button>
           </div>
 
@@ -559,6 +579,31 @@ function CoursePage() {
               </div>
             )}
 
+            {/* RESOURCES TAB CONTENT */}
+            {activeTab === "resources" && (
+              <div>
+                {course.resources && course.resources.length > 0 ? (
+                  course.resources.slice(0, 5).map((res, idx) => (
+                    <div key={idx} className="mb-6">
+                      <div className="aspect-w-16 aspect-h-9 mb-2">
+                        <iframe
+                          src={res.videoLink}
+                          title={`Resource Video ${idx + 1}`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-64"
+                        ></iframe>
+                      </div>
+                      {/* Transcript is NOT shown here */}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-gray-500">No resources available.</div>
+                )}
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -586,8 +631,32 @@ function CoursePage() {
 
 
 
-        {/* Right column - Chat area */}
-        <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
+        {isAnswerModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/4 max-h-[80vh] flex flex-col">
+              <h4 className="text-lg font-bold mb-4">Your Answer</h4>
+
+              {/* Scroll only this part */}
+              <div className="flex-1 overflow-y-auto mb-4">
+                <pre className="whitespace-pre-wrap text-sm">{answerModalContent}</pre>
+              </div>
+
+              {/* Always visible, below the scroll area */}
+              <button
+                onClick={() => setIsAnswerModalOpen(false)}
+                className="self-end px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+
+
+
+        {/* Right column - now w-3/5 */}
+        <div className="w-3/5 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
           <div className="flex-1 overflow-y-auto mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
             {course.messages && course.messages.length > 0 ? (
               course.messages.map((msg, index) => (
