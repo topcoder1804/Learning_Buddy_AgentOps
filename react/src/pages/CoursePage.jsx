@@ -17,6 +17,10 @@ function CoursePage() {
   const [newMessage, setNewMessage] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const chatEndRef = useRef(null)
+  const [quizzes, setQuizzes] = useState([])           // loaded from localStorage
+  const [takingQuiz, setTakingQuiz] = useState(null)   // the quiz object you’re currently answering
+  const [answers, setAnswers] = useState({})           // e.g. { 0: "Paris", 1: "Mars", ... }
+  const [score, setScore] = useState(null)             // your computed score
 
   // Fetch or create backend user
   useEffect(() => {
@@ -33,6 +37,11 @@ function CoursePage() {
     }
     getBackendUser()
   }, [user])
+
+  useEffect(() => {
+    const all = JSON.parse(localStorage.getItem("quizzes") || "[]")
+    setQuizzes(all.filter(q => q.course === id))
+  }, [activeTab])
 
   // Load course data
   useEffect(() => {
@@ -78,25 +87,44 @@ function CoursePage() {
     });
     return await res.json();
   }
-  
+
+  function startQuiz(quiz) {
+    setTakingQuiz(quiz)
+    setAnswers({})
+    setScore(null)
+  }
+
+  function handleAnswerChange(qIdx, value) {
+    setAnswers(a => ({ ...a, [qIdx]: value }))
+  }
+
+  function submitQuiz() {
+    let correct = 0
+    takingQuiz.questions.forEach((q, idx) => {
+      if (answers[idx] === q.answer) correct++
+    })
+    setScore(correct)
+    toast.success(`Quiz submitted! You scored ${correct}/${takingQuiz.questions.length}`)
+  }
+
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-  
+
     try {
       // Send the user message to the backend and get AI reply + updated messages (with correct sequence numbers)
       const { reply, messages } = await sendCourseMessage(course._id, newMessage);
-  
+
       // Update local state with the latest messages from backend
       setCourse(prev => ({ ...prev, messages }));
-  
+
       setNewMessage("");
     } catch (error) {
       toast.error("Failed to get AI response.");
     }
   };
-  
+
 
   const handleGenerateQuiz = async () => {
     try {
@@ -195,31 +223,28 @@ function CoursePage() {
           <div className="flex border-b dark:border-gray-700 mb-4">
             <button
               onClick={() => setActiveTab("messages")}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "messages"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
+              className={`px-4 py-2 font-medium text-sm ${activeTab === "messages"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                }`}
             >
               Messages
             </button>
             <button
               onClick={() => setActiveTab("quizzes")}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "quizzes"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
+              className={`px-4 py-2 font-medium text-sm ${activeTab === "quizzes"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                }`}
             >
               Quizzes
             </button>
             <button
               onClick={() => setActiveTab("assignments")}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "assignments"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
+              className={`px-4 py-2 font-medium text-sm ${activeTab === "assignments"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                }`}
             >
               Assignments
             </button>
@@ -232,9 +257,8 @@ function CoursePage() {
                   course.messages.map((msg, index) => (
                     <div
                       key={index}
-                      className={`p-3 rounded-lg ${
-                        msg.type === "user" ? "bg-blue-100 dark:bg-blue-900 ml-4" : "bg-gray-100 dark:bg-gray-700 mr-4"
-                      }`}
+                      className={`p-3 rounded-lg ${msg.type === "user" ? "bg-blue-100 dark:bg-blue-900 ml-4" : "bg-gray-100 dark:bg-gray-700 mr-4"
+                        }`}
                     >
                       <p className="text-sm">{msg.message}</p>
                     </div>
@@ -250,25 +274,78 @@ function CoursePage() {
 
             {activeTab === "quizzes" && (
               <div>
-                {/* Render quizzes from localStorage */}
-                {JSON.parse(localStorage.getItem("quizzes") || "[]")
-                  .filter((quiz) => quiz.course === id)
-                  .map((quiz, index) => (
-                    <div key={index} className="border dark:border-gray-700 rounded-lg p-3 mb-3">
-                      <h3 className="font-medium">{quiz.topic}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {quiz.questions?.length || 0} questions
-                      </p>
-                      <button className="mt-2 text-sm text-blue-500 hover:text-blue-600">Take Quiz</button>
-                    </div>
-                  ))}
+                {!takingQuiz ? (
+                  // Quiz list
+                  quizzes.length ? (
+                    quizzes.map((quiz, i) => (
+                      <div key={quiz._id} className="border rounded p-4 mb-4">
+                        <h3 className="font-bold">{quiz.topic}</h3>
+                        <p className="text-sm">{quiz.questions.length} questions</p>
+                        <button
+                          className="mt-2 text-blue-500"
+                          onClick={() => startQuiz(quiz)}
+                        >
+                          Take Quiz
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-500">No quizzes yet. Generate one!</div>
+                  )
+                ) : (
+                  // Quiz question form
+                  <form onSubmit={e => { e.preventDefault(); submitQuiz() }}>
+                    {takingQuiz.questions.map((q, idx) => (
+                      <fieldset key={idx} className="mb-6">
+                        <legend className="font-medium">{idx + 1}. {q.question}</legend>
+                        {q.options.map(opt => (
+                          <label key={opt} className="block ml-4">
+                            <input
+                              type="radio"
+                              name={`q${idx}`}
+                              value={opt}
+                              checked={answers[idx] === opt}
+                              onChange={() => handleAnswerChange(idx, opt)}
+                              className="mr-2"
+                            />
+                            {opt}
+                          </label>
+                        ))}
+                        <p className="text-xs text-gray-500 italic">Hint: {q.hint}</p>
+                      </fieldset>
+                    ))}
 
-                {(!localStorage.getItem("quizzes") ||
-                  JSON.parse(localStorage.getItem("quizzes")).filter((q) => q.course === id).length === 0) && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">No quizzes yet. Generate one!</div>
+                    <button
+                      type="submit"
+                      className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                      disabled={Object.keys(answers).length !== takingQuiz.questions.length}
+                    >
+                      Submit Quiz
+                    </button>
+                    <button
+                      type="button"
+                      className="ml-2 text-red-500"
+                      onClick={() => {
+                        setTakingQuiz(null)
+                        setScore(null)
+                        setAnswers({})
+                        toast(`Quiz canceled`, { icon: '✋' })
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </form>
                 )}
+
+                {takingQuiz && score !== null && (
+                  <div className="mt-4 p-4 bg-blue-100 rounded">
+                    You scored <strong>{score}</strong> out of <strong>{takingQuiz.questions.length}</strong>!
+                  </div>
+                )}
+
               </div>
             )}
+
 
             {activeTab === "assignments" && (
               <div>
@@ -283,11 +360,10 @@ function CoursePage() {
                       </p>
                       <div className="flex justify-between mt-2">
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
-                            assignment.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          }`}
+                          className={`text-xs px-2 py-0.5 rounded-full ${assignment.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            }`}
                         >
                           {assignment.status}
                         </span>
@@ -298,10 +374,10 @@ function CoursePage() {
 
                 {(!localStorage.getItem("assignments") ||
                   JSON.parse(localStorage.getItem("assignments")).filter((a) => a.course === id).length === 0) && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    No assignments yet. Generate one!
-                  </div>
-                )}
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      No assignments yet. Generate one!
+                    </div>
+                  )}
               </div>
             )}
           </div>
@@ -314,9 +390,8 @@ function CoursePage() {
               course.messages.map((msg, index) => (
                 <div key={index} className={`mb-4 ${msg.type === "user" ? "text-right" : "text-left"}`}>
                   <div
-                    className={`inline-block max-w-[80%] p-3 rounded-lg ${
-                      msg.type === "user" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"
-                    }`}
+                    className={`inline-block max-w-[80%] p-3 rounded-lg ${msg.type === "user" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"
+                      }`}
                   >
                     <p>{msg.message}</p>
                   </div>
