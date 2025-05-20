@@ -26,31 +26,36 @@ Millions of learners across India, particularly in rural areas, lack access to a
 ## Key Features
 
 ### Seamless Onboarding
-Personalized learning plans created via a smart onboarding wizard that captures learner goals, skill levels, and time constraints.
+A smart onboarding wizard captures learner goals, current skill levels, and available time to automatically generate personalized learning plans tailored for individual progress.
 
 ### AI-Powered Learning Buddy
-24/7 adaptive support with real-time feedback, tailored content, and dynamic learning paths.
+Always-on intelligent assistant that provides real-time feedback, adjusts difficulty levels, and recommends content dynamically based on the learner's performance.
 
 ### Centralized Dashboard
-One dashboard to rule them all — track progress, manage modules, and resume learning effortlessly.
+Unified dashboard interface for learners to monitor course progress, resume incomplete modules, and access key actions — all in one place.
 
 ### Smart Resource Management
-Upload/download organized content and access curated materials for each topic.
+Enables structured access to curated learning materials for each course. Upload and download support will be added soon as part of the DataRoom integration.
 
 ### Adaptive Study Flow
-Each topic includes:
-- Diagnostic quizzes
-- Personalized lessons
-- AI Q&A
-- Instant quizzes and assignments
-- Deadline reminders
+Each topic is broken into interactive components to maximize retention:
+- Diagnostic quizzes to assess readiness
+- Customized lessons with auto-generated content
+- Instant AI-powered Q&A support
+- Auto-generated quizzes and assignments
+- Smart reminders for upcoming deadlines
 
-### Progress Tracking & Nudges
-Visual progress trackers and motivational nudges to keep learners engaged and on track.
+### Progress Tracking
+Graphical progress indicators help learners stay consistent and on track throughout their journey.
 
-### Inclusive Accessibility
-Multilingual support (e.g., regional languages) and offline functionality to ensure reach across all geographies.
+---
 
+## Future Scope
+
+- **Cloudflare Workers for AI Embedding**: Planned integration to enable high-performance, serverless AI vector embeddings.
+- **DataRoom File Management**: Upcoming feature to allow learners to upload, manage, and access their files and notes within the platform.
+- **Multilingual Support**: Add support for regional languages to make the platform accessible to a broader audience.  
+- **Offline Functionality**: Allow learners to download content and continue learning without active internet access.
 ---
 
 ## Backend (Node.js + Express + MongoDB)
