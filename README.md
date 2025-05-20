@@ -1,7 +1,7 @@
-# Learning Buddy
+# EduBuddy
 
 
-Welcome to **Learning Buddy**, an AI-powered learning assistant designed to make education accessible, personalized, and effective — especially for students in underserved and rural areas of India.
+Welcome to **EduBuddy**, an AI-powered learning assistant designed to make education accessible, personalized, and effective — especially for students in underserved and rural areas of India.
 
 EduBuddy addresses the lack of personalized support in large-scale, low-cost online learning models by delivering 24/7 guidance, real-time feedback, adaptive content, and intelligent progress tracking.
 
@@ -28,9 +28,6 @@ Millions of learners across India, particularly in rural areas, lack access to a
 ### Seamless Onboarding
 A smart onboarding wizard captures learner goals, current skill levels, and available time to automatically generate personalized learning plans tailored for individual progress.
 
-### AI-Powered Learning Buddy
-Always-on intelligent assistant that provides real-time feedback, adjusts difficulty levels, and recommends content dynamically based on the learner's performance.
-
 ### Centralized Dashboard
 Unified dashboard interface for learners to monitor course progress, resume incomplete modules, and access key actions — all in one place.
 
@@ -47,6 +44,20 @@ Each topic is broken into interactive components to maximize retention:
 
 ### Progress Tracking
 Graphical progress indicators help learners stay consistent and on track throughout their journey.
+
+### Smart Quiz Generator
+- Automatically generates quizzes based on selected topics and past performance.
+- Provides real-time scoring and detailed feedback with hints.
+
+### Dynamic Assignment Builder
+AI-curated assignments that evolve in difficulty based on performance.
+
+### Curated YouTube Integration
+Suggests high-quality, relevant videos based on the user’s learning path.
+
+### AI-Powered Conversational Tutor
+Integrated chatbot to answer context-specific questions using course materials.
+
 
 ---
 
@@ -74,8 +85,6 @@ Graphical progress indicators help learners stay consistent and on track through
 - Authentication and structured routing (Private & Public Layouts)
 - Course and Quiz Management UIs
 - Modals and Cards for adding/viewing course data
-- Components include:
-  - `HomePage`, `QuizRunner`, `NewCourseModal`, `CourseCard`, `SideNav`, and more
 - Resources tab for course-specific learning materials
 
 ---
