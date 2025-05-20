@@ -7,6 +7,11 @@ const MessageSchema = new Schema({
   sequenceNo: Number
 });
 
+const VideoResourceSchema = new Schema({
+  videoLink: { type: String, required: true },
+  transcript: { type: String, required: true }
+});
+
 const CourseSchema = new Schema({
   name:        { type: String, required: true },
   level:       { type: String, enum: ['easy','medium','hard'], default: 'easy' },
@@ -15,7 +20,8 @@ const CourseSchema = new Schema({
   messages:    [MessageSchema],
   quizzes:     [{ quiz: { type: Schema.Types.ObjectId, ref: 'Quiz' }, sequenceNo: Number }],
   assignments: [{ assignment: { type: Schema.Types.ObjectId, ref: 'Assignment' }, sequenceNo: Number }],
-  createdBy:   { type: Schema.Types.ObjectId, ref: 'User', required: true }  // <-- NEW FIELD
+  createdBy:   { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  resources:   [VideoResourceSchema]  // New field for YouTube videos and transcripts
 }, { timestamps: true });
 
 module.exports = mongoose.model('Course', CourseSchema);

@@ -120,7 +120,8 @@ exports.getOrCreateUserByEmail = async (req, res) => {
       user = new User({
         name: name || 'Unknown',
         email,
-        courses: []
+        courses: [
+        ]
       });
       await user.save();
     }
@@ -129,4 +130,5 @@ exports.getOrCreateUserByEmail = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
