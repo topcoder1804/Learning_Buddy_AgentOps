@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const Assignment = require('../models/Assignment');
 const Quiz = require('../models/Quiz');
-const CHEMISTRY_COURSE_ID = "682ba547f7b21e59d7edaa18";
 
 exports.getUsers = async (req, res) => {
   try {
@@ -122,10 +121,6 @@ exports.getOrCreateUserByEmail = async (req, res) => {
         name: name || 'Unknown',
         email,
         courses: [
-          {
-            course: CHEMISTRY_COURSE_ID,
-            status: "Not Started"
-          }
         ]
       });
       await user.save();
