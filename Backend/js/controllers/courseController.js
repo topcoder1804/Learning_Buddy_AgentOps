@@ -190,3 +190,71 @@ exports.getCourseMessages = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// GET /api/courses/recommendations?email=...
+exports.getCourseRecommendations = async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: 'email query param is required' });
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const courses = await Course.find()
+      .select('name description')
+      .lean();
+
+    const courseList = courses.map(c => ({
+      id:          c._id.toString(),
+      name:        c.name,
+      description: c.description
+    }));
+
+    const systemMsg = {
+      role: "system",
+      content: `
+You are a course‐recommendation engine.  You will be given:
+  • A user’s profession: "${user.profession || 'N/A'}"
+  • A user’s interests: ${JSON.stringify(user.interests || [])}
+  • A list of available courses, each with "id", "name", and "description".
+
+Pick exactly TWO course IDs that best match this user’s profile.
+Return as strictly valid JSON, e.g.:
+
+["<courseId1>","<courseId2>"]
+      `.trim()
+    };
+    const userMsg = {
+      role: "user",
+      content: JSON.stringify(courseList, null, 2)
+    };
+
+    const response = await groq.chat.completions.create({
+      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+      messages: [ systemMsg, userMsg ],
+      temperature: 0.7
+    });
+
+    // 1) grab the raw LLM output
+    let raw = response.choices[0].message.content.trim();
+
+    // 2) extract the first JSON‐array substring (“[...]”)
+    const match = raw.match(/\[([\s\S]*?)\]/);
+    if (match) {
+      raw = match[0];
+    }
+
+    // 3) parse it
+    let recommended = JSON.parse(raw);
+
+    // 4) validate
+    if (!Array.isArray(recommended) || recommended.length !== 2) {
+      throw new Error(`Expected exactly 2 IDs but got ${JSON.stringify(recommended)}`);
+    }
+
+    res.json({ recommended });
+  } catch (err) {
+    console.error("getCourseRecommendations error:", err);
+    res.status(500).json({ error: err.message || "Invalid recommendation format from LLM" });
+  }
+};

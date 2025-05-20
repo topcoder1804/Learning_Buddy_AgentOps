@@ -15,6 +15,8 @@ function HomePage() {
   const [userProgress, setUserProgress] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [recommendedCourses, setRecommendedCourses] = useState([])
+  const [otherCourses, setOtherCourses] = useState([])
 
   // Fetch or create backend user, then load courses and progress
   useEffect(() => {
@@ -40,8 +42,16 @@ function HomePage() {
         }
 
         const progressData = calculateProgress(coursesData)
-       setUserProgress(progressData)
+        setUserProgress(progressData)
 
+        const recRes = await fetch(`http://localhost:8080/api/courses/recommendations?email=${encodeURIComponent(email)}`);
+        const { recommended } = await recRes.json();
+
+        const recommendedCourses = coursesData.filter(c => recommended?.includes(c._id));
+        const otherCourses = coursesData.filter(c => !recommended?.includes(c._id));
+
+        setRecommendedCourses(recommendedCourses);
+        setOtherCourses(otherCourses);
 
       } catch (error) {
         console.error("Error loading home data:", error)
@@ -111,12 +121,12 @@ function HomePage() {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Your Courses</h1>
-        <button
+        {/*     <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-105"
         >
           <PlusIcon className="w-6 h-6" />
-        </button>
+        </button> */}
       </div>
 
       {courses.length === 0 ? (
@@ -131,11 +141,39 @@ function HomePage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <CourseCard key={course._id} course={course} progress={userProgress[course._id] || 0} />
-          ))}
-        </div>
+        <>
+          {/* Recommended */}
+          {recommendedCourses.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-xl font-semibold mb-4">Recommended for you</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendedCourses.map(course => (
+                  <CourseCard
+                    key={course._id}
+                    course={course}
+                    progress={userProgress[course._id] || 0}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Others */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">
+              {recommendedCourses.length > 0 ? "All Courses" : "Your Courses"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {otherCourses.map(course => (
+                <CourseCard
+                  key={course._id}
+                  course={course}
+                  progress={userProgress[course._id] || 0}
+                />
+              ))}
+            </div>
+          </section>
+        </>
       )}
 
       {isModalOpen && (
