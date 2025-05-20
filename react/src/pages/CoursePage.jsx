@@ -71,13 +71,14 @@ function CoursePage() {
   }, [course?.messages, activeTab])
 
   async function sendCourseMessage(courseId, userMessage) {
-    const res = await fetch(`/api/courses/${courseId}/chat`, {
+    const res = await fetch(`http://localhost:8080/api/courses/${courseId}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: userMessage })
-    })
-    return await res.json()
+    });
+    return await res.json();
   }
+  
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

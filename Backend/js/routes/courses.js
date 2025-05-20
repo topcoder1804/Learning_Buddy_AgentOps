@@ -12,6 +12,7 @@ const {
 
 // All courses (admin or for reference)
 router.get('/', getCourses);
+router.post('/:id/chat', chatWithGroq);
 
 // User-specific courses
 router.get('/for-user', getCoursesForUser);
@@ -28,6 +29,5 @@ router.put('/:id', updateCourse);
 // Delete course
 router.delete('/:id', deleteCourse);
 
-router.post('/:id/chat', chatWithGroq);
 
 module.exports = router;
