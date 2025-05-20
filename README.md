@@ -83,7 +83,7 @@ Integrated chatbot to answer context-specific questions using course materials.
 ![Resources](Screenshots/Resources.jpeg)
 
 ### 🤖 AI Tutor
-![AI Tutor](Screenshots/Ai-tutor.jpeg)
+![AI Tutor](Screenshots/AI-tutor.jpeg)
 
 ---
 
