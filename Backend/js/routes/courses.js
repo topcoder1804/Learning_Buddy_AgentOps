@@ -6,11 +6,14 @@ const {
   getCourseById,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  chatWithGroq, 
+  getCourseMessages
 } = require('../controllers/courseController');
 
 // All courses (admin or for reference)
 router.get('/', getCourses);
+router.post('/:id/chat', chatWithGroq);
 
 // User-specific courses
 router.get('/for-user', getCoursesForUser);
@@ -26,5 +29,8 @@ router.put('/:id', updateCourse);
 
 // Delete course
 router.delete('/:id', deleteCourse);
+
+router.get('/:id/messages', getCourseMessages);
+
 
 module.exports = router;

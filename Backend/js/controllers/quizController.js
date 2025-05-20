@@ -72,76 +72,94 @@ exports.deleteQuiz = async (req, res) => {
 // POST /api/quizzes/:id/score
 exports.addScore = async (req, res) => {
   try {
-    const { user, score } = req.body;
+    const { score } = req.body;
     const quiz = await Quiz.findById(req.params.id);
     if (!quiz) return res.status(404).json({ msg: 'Quiz not found' });
-    quiz.scores.push({ user, score, time: new Date() });
+    quiz.scores.push({ score, time: new Date() });
     await quiz.save();
-    res.json(quiz);
+    return res.json(quiz);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    return res.status(400).json({ error: err.message });
   }
 };
 
+
+
 // POST /api/quizzes/generate
 exports.generateQuiz = async (req, res) => {
-  //console.log("generateQuiz endpoint hit", req.body);
-  const { topic, dueDate } = req.body; // topic is the Course ObjectId
+  const { courseId, dueDate } = req.body;
+
+  // 1) Find the course
+  const course = await Course.findById(courseId);
+  if (!course) {
+    return res.status(404).json({ error: 'Course not found' });
+  }
+
+  // 2) Build a context string from the course messages
+  const convoContext = course.messages
+    .sort((a, b) => a.sequenceNo - b.sequenceNo)
+    .map(m => `#${m.sequenceNo} [${m.type}]: ${m.message}`)
+    .join('\n');
+
+
+  // 3) Construct prompt
+  const prompt = `
+Generate a JSON array of 5 multiple-choice questions on the topic "${course.name}".
+
+Use the following conversation history as context (you may draw examples or details from it):
+${convoContext}
+
+Each question object must have:
+- "question": The question text
+- "options": An array of 4 answer choices
+- "answer": The correct answer exactly as one of the options
+- "hint": A short hint
+
+**Return strictly valid JSON** (an array of question objects) with no extra text.
+  `.trim();
+
 
   try {
-    // 1. Lookup the course by ObjectId
-    const course = await Course.findById(topic);
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-
-    // 2. Use the course name in the AI prompt
-    const prompt = `
-Create a JSON array of 5 multiple-choice questions (MCQs) on the topic "${course.name}".
-Each object should have:
-- "question": The question text
-- "options": An array of 4 options
-- "answer": The correct answer text
-- "hint": A short hint to help solve the question
-
-Format strictly as valid JSON only. Do not include explanations outside the array.
-    `;
-   // console.log("Prompt sent to Groq:", prompt);
+    // 4) Call your chat API
     const response = await groq.chat.completions.create({
       model: "meta-llama/llama-4-maverick-17b-128e-instruct",
       messages: [
-        {
-          role: "system",
-          content: "You are an expert quiz generator that returns structured JSON for educational apps."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
+        { role: "system", content: "You are an expert quiz generator for educational apps." },
+        { role: "user",   content: prompt }
       ]
     });
 
-    const content = response.choices[0].message.content.trim();
+    const raw = response.choices[0].message.content.trim();
+    console.log("AI response:", raw);
     let questions;
     try {
-      questions = JSON.parse(content);
+      questions = JSON.parse(raw);
+      console.log("Parsed questions:", questions);
     } catch (err) {
-      return res.status(500).json({ error: "Could not parse JSON from Groq response", raw: content });
+      return res.status(500).json({
+        error: "Failed to parse JSON from AI",
+        raw
+      });
     }
 
-    const now = new Date();
-    const defaultDue = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-
-    // Save the quiz to the database
+    // 5) Create + save the quiz
     const quiz = new Quiz({
-      topic, // ObjectId reference to Course
+      course:   course._id,
       questions,
-      dueDate: dueDate ? new Date(dueDate) : defaultDue
+      dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 3*24*60*60*1000)
     });
     await quiz.save();
-    res.status(201).json(quiz);
 
+    // 6) (Optional) associate it with the course
+    course.quizzes.push({
+      quiz: quiz._id,
+      sequenceNo: course.quizzes.length + 1
+    });
+    await course.save();
+
+    return res.status(201).json(quiz);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("generateQuiz error:", err);
+    return res.status(500).json({ error: err.message });
   }
 };

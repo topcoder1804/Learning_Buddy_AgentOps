@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom"
 
 function CourseCard({ course, progress }) {
-  // Calculate progress percentage
-  const progressPercent = Math.round(progress * 100)
+  const progressPercent = Math.round(progress)
 
   // Determine level badge color
   const getLevelColor = (level) => {

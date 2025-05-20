@@ -1,4 +1,3 @@
-// utils/physicsMock.js
 
 const physicsMock = {
     name: "Physics",

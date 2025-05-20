@@ -1,4 +1,3 @@
-// utils/webDevMock.js
 
 const webDevMock = {
     name: "Web Development",

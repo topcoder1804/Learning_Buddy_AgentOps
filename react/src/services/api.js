@@ -47,6 +47,13 @@ export async function updateUser(userId, userData) {
   })
 }
 
+export async function sendCourseMessage(courseId, userMessage) {
+  return apiRequest(`/courses/${courseId}/chat`, {
+    method: "POST",
+    body: JSON.stringify({ message: userMessage }),
+  });
+}
+
 export async function fetchUserProgress(userId) {
   // In a real app, this would be an API call
   // For now, we'll use localStorage
@@ -125,7 +132,7 @@ export async function generateQuiz(courseId) {
 
   // Try to call the API
   try {
-    return await apiRequest("/quizzes", {
+    return await apiRequest("/quizzes/generate", {
       method: "POST",
       body: JSON.stringify({ courseId }),
     })
@@ -157,7 +164,7 @@ export async function generateAssignment(courseId) {
 
   // Try to call the API
   try {
-    return await apiRequest("/assignments", {
+    return await apiRequest("/assignments/generate", {
       method: "POST",
       body: JSON.stringify({ courseId }),
     })

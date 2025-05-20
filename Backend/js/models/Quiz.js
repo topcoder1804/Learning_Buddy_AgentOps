@@ -15,7 +15,7 @@ const ScoreSchema = new Schema({
 });
 
 const QuizSchema = new Schema({
-  topic:     { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+  course:     { type: Schema.Types.ObjectId, ref: 'Course', required: true },
   questions: [QuestionSchema],
   scores:    [ScoreSchema],
   dueDate:   Date

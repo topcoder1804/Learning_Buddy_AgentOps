@@ -38,6 +38,11 @@ function HomePage() {
           const progressData = await fetchUserProgress(backendUser._id)
           setUserProgress(progressData)
         }
+
+        const progressData = calculateProgress(coursesData)
+       setUserProgress(progressData)
+
+
       } catch (error) {
         console.error("Error loading home data:", error)
         toast.error("Failed to load courses")
@@ -64,6 +69,35 @@ function HomePage() {
       setCourses(coursesData)
     }
   }
+
+  /**
+ * Given an array of fully‐populated Course objects, returns an object
+ * mapping courseId → percentComplete (0–100).
+ */
+  function calculateProgress(courses) {
+    const progress = {};
+
+    courses.forEach(course => {
+      // quizzes come in as [{ quiz: { ..., scores: [...] }, sequenceNo, _id }, …]
+      const totalQuizzes = course.quizzes.length;
+      const completedQuizzes = course.quizzes.filter(q => (q.quiz.scores?.length || 0) > 0).length;
+
+      // assignments come in as [{ assignment: { ..., submissions: [...] }, sequenceNo, _id }, …]
+      const totalAssigns = course.assignments.length;
+      const completedAssigns = course.assignments.filter(a => (a.assignment.submissions?.length || 0) > 0).length;
+
+      const totalItems = totalQuizzes + totalAssigns;
+      const doneItems = completedQuizzes + completedAssigns;
+      const percent = totalItems > 0
+        ? Math.round((doneItems / totalItems) * 100)
+        : 0;
+
+      progress[course._id] = percent;
+    });
+
+    return progress;
+  }
+
 
   if (isLoading) {
     return (
