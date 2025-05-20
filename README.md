@@ -61,6 +61,32 @@ Integrated chatbot to answer context-specific questions using course materials.
 
 ---
 
+## Screenshots
+
+### Login Page
+![Login Page](Screenshots/login.png)
+
+
+### Courses
+![Courses](Screenshots/courses.png)
+
+### Profile Page
+![Profile Page](Screenshots/profile.png)
+
+### Quizzes
+![Quizzes](assets/screenshots/quizes.png)
+
+### Assignments
+![Assignments](Screenshots/assignments.png)
+
+### Resources
+![Resources](Screenshots/resources.png)
+
+### 🤖 AI Tutor
+![AI Tutor](Screenshots/ai-tutor.png)
+
+---
+
 ## Future Scope
 
 - **Cloudflare Workers for AI Embedding**: Planned integration to enable high-performance, serverless AI vector embeddings.
