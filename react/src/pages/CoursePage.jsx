@@ -19,7 +19,15 @@ function CoursePage() {
   const [quizzes, setQuizzes] = useState([])           // loaded from localStorage
   const [takingQuiz, setTakingQuiz] = useState(null)   // the quiz object you’re currently answering
   const [answers, setAnswers] = useState({})           // e.g. { 0: "Paris", 1: "Mars", ... }
-  const [score, setScore] = useState(null)             // your computed score
+  const [score, setScore] = useState(null)
+  const [assignments, setAssignments] = useState([])
+  const [selectedAssignment, setSelectedAssignment] = useState(null)
+  const [answerText, setAnswerText] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [answerModalContent, setAnswerModalContent] = useState("")
+  const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
+
 
   // Fetch or create backend user
   useEffect(() => {
@@ -41,6 +49,24 @@ function CoursePage() {
     const all = JSON.parse(localStorage.getItem("quizzes") || "[]")
     setQuizzes(all.filter(q => q.course === id))
   }, [activeTab])
+
+  useEffect(() => {
+    const all = JSON.parse(localStorage.getItem("quizzes")||"[]")
+    // each quiz in LS has a `.scores` array
+    setQuizzes(all.filter(q => q.course === id))
+  }, [activeTab, id])
+  
+
+  useEffect(() => {
+    const all = JSON.parse(localStorage.getItem("assignments") || "[]")
+    setAssignments(all.filter(a => a.course === id))
+    // reset any open assignment when switching tabs/courses
+    setSelectedAssignment(null)
+    setAnswerText("")
+  }, [activeTab, id])
+
+
+
 
   // Load course data
   useEffect(() => {
@@ -127,6 +153,50 @@ function CoursePage() {
       toast.error("Failed to get AI response.");
     }
   };
+
+  async function handleSubmitAssignment() {
+    if (!selectedAssignment || !answerText.trim()) return
+
+    setIsSubmitting(true)
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/assignments/${selectedAssignment._id}/submission`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answer: answerText.trim() })
+        }
+      )
+      if (!res.ok) throw new Error("Submission failed")
+      const updated = await res.json()
+
+      toast.success("Assignment submitted!")
+
+      // 1) Update React state
+      setAssignments((prev) =>
+        prev.map(item => (item._id === updated._id ? updated : item))
+      )
+
+      // 2) Persist to localStorage
+      const stored = JSON.parse(localStorage.getItem("assignments") || "[]")
+      const merged = stored.map(item =>
+        item._id === updated._id ? updated : item
+      )
+      localStorage.setItem("assignments", JSON.stringify(merged))
+
+      // 3) Close the form
+      setSelectedAssignment(null)
+      setAnswerText("")
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to submit assignment")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+
+
 
 
   const handleGenerateQuiz = async () => {
@@ -352,40 +422,110 @@ function CoursePage() {
 
 
             {activeTab === "assignments" && (
-              <div>
-                {/* Render assignments from localStorage */}
-                {JSON.parse(localStorage.getItem("assignments") || "[]")
-                  .filter((assignment) => assignment.course === id)
-                  .map((assignment, index) => (
-                    <div key={index} className="border dark:border-gray-700 rounded-lg p-3 mb-3">
-                      <h3 className="font-medium">{assignment.question.substring(0, 50)}...</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                      </p>
-                      <div className="flex justify-between mt-2">
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${assignment.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            }`}
+              <div className="p-4 space-y-4">
+                {!selectedAssignment ? (
+                  // --- assignment list ---
+                  assignments.length ? (
+                    assignments.map(a => (
+                      <div key={a._id} className="border rounded-lg p-3 flex justify-between items-center">
+                        <span className="font-medium truncate">{a.question}</span>
+                        <button
+                          className="text-blue-500 hover:underline"
+                          onClick={() => setSelectedAssignment(a)}
                         >
-                          {assignment.status}
-                        </span>
-                        <button className="text-sm text-blue-500 hover:text-blue-600">View</button>
+                          View
+                        </button>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-gray-500">No assignments yet. Generate one!</div>
+                  )
+                ) : (
+                  // --- selected assignment + submit form ---
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold">Assignment</h3>
+                    <p className="whitespace-pre-wrap border p-3 rounded bg-gray-50">{selectedAssignment.question}</p>
 
-                {(!localStorage.getItem("assignments") ||
-                  JSON.parse(localStorage.getItem("assignments")).filter((a) => a.course === id).length === 0) && (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      No assignments yet. Generate one!
+                    <textarea
+                      rows={6}
+                      value={answerText}
+                      onChange={e => setAnswerText(e.target.value)}
+                      placeholder="Type your answer here..."
+                      className="w-full p-2 border rounded"
+                    />
+
+                    <div className="flex space-x-2">
+                      <button
+                        disabled={!answerText.trim() || isSubmitting}
+                        onClick={handleSubmitAssignment}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                      >
+                        {isSubmitting ? "Submitting…" : "Submit Answer"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedAssignment(null)
+                          setAnswerText("")
+                        }}
+                        className="text-red-500 px-4 py-2"
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  )}
+
+                    {selectedAssignment.submissions?.length > 0 && (
+                      <ul className="list-disc list-inside text-sm text-gray-700">
+                        {selectedAssignment.submissions.map(sub => (
+                          <li key={sub._id} className="mb-2 flex justify-between items-center">
+                            <span>
+                              <strong>Score:</strong> {sub.score}/100&nbsp;
+                              <span className="text-gray-500">on {new Date(sub.time).toLocaleString()}</span>
+                            </span>
+                            <button
+                              onClick={() => {
+                                setAnswerModalContent(sub.userAnswer)
+                                setIsAnswerModalOpen(true)
+                              }}
+                              className="text-blue-500 hover:underline text-sm"
+                            >
+                              View Answer
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                  </div>
+                )}
               </div>
             )}
+
           </div>
         </div>
+
+        {isAnswerModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/4 max-h-[80vh] flex flex-col">
+              <h4 className="text-lg font-bold mb-4">Your Answer</h4>
+
+              {/* Scroll only this part */}
+              <div className="flex-1 overflow-y-auto mb-4">
+                <pre className="whitespace-pre-wrap text-sm">{answerModalContent}</pre>
+              </div>
+
+              {/* Always visible, below the scroll area */}
+              <button
+                onClick={() => setIsAnswerModalOpen(false)}
+                className="self-end px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+
+
 
         {/* Right column - Chat area */}
         <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
