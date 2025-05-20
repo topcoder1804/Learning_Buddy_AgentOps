@@ -8,7 +8,7 @@ import toast from "react-hot-toast"
 function NewCourseModal({ onClose, onSave, userId }) {
   const [formData, setFormData] = useState({
     name: "",
-    level: "Beginner",
+    level: "easy",
     description: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
