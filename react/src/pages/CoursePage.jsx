@@ -11,7 +11,7 @@ function CoursePage() {
   const { user } = useUser()
   const [backendUser, setBackendUser] = useState(null)
   const [course, setCourse] = useState(null)
-  const [activeTab, setActiveTab] = useState("messages")
+  const [activeTab, setActiveTab] = useState("quizzes")
   const [isLoading, setIsLoading] = useState(true)
   const [newMessage, setNewMessage] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -271,6 +271,8 @@ function CoursePage() {
       // Update localStorage
       const savedAssignments = JSON.parse(localStorage.getItem("assignments") || "[]")
       localStorage.setItem("assignments", JSON.stringify([...savedAssignments, assignment]))
+
+      setAssignments(prev => [...prev, assignment])
 
       toast.success("Assignment generated successfully!")
       setActiveTab("assignments")
