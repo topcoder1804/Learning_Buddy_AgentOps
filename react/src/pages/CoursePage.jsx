@@ -1,4 +1,4 @@
-
+import ReactMarkdown from 'react-markdown';
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { useUser } from "@clerk/clerk-react"
@@ -183,6 +183,7 @@ function CoursePage() {
       const { reply, messages } = await sendCourseMessage(course._id, newMessage.trim())
 
       // 3) Replace the placeholder & sync with backend messages
+      console.log("This is messages: ", messages)
       setCourse(prev => ({
         ...prev,
         messages
@@ -720,16 +721,18 @@ function CoursePage() {
         <div className="w-3/5 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 flex flex-col">
           <div className="flex-1 overflow-y-auto mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
             {course.messages && course.messages.length > 0 ? (
-              course.messages.map((msg, index) => (
-                <div key={index} className={`mb-4 ${msg.type === "user" ? "text-right" : "text-left"}`}>
+              course.messages.map((msg, index) => {
+                
+                return <div key={index} className={`mb-4 ${msg.type === "user" ? "text-right" : "text-left"}`}>
                   <div
                     className={`inline-block max-w-[80%] p-3 rounded-lg ${msg.type === "user" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"
                       }`}
                   >
-                    <p>{msg.message}</p>
+                    {/* <p>{msg.message}</p> */}
+                    <ReactMarkdown>{msg.message}</ReactMarkdown>
                   </div>
                 </div>
-              ))
+            })
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
                 <div className="text-center">
